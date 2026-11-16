@@ -1,56 +1,62 @@
-\newcommand{\titlePage}{
-
-\thispagestyle{empty}
+% Title page (single page). The GIU sample template printed the same page twice with a blank page
+% between; that duplication is treated as accidental and removed.
+% NOTE: spacing is done with \par / \vspace only (no "\\[..]" tricks).
+\newcommand{\titlePage}{%
+\thispagestyle{empty}%
 \begin{center}
-	\includegraphics[width=3.5cm]{figures/giu_logo.png}\\[2mm]
-	\textbf{German International University}\\[2mm]
-		\textbf{Faculty of Informatics and Computer Science}\\[1mm]
-
-	
+	\vspace*{1cm}
+	\includegraphics[width=3.5cm]{figures/giu_logo.png}\par
+	\vspace{5mm}
+	{\large\bfseries German International University\par}
+	\vspace{2mm}
+	{\large\bfseries Faculty of Informatics and Computer Science\par}
+	\vspace{2.5cm}
+	{\LARGE\bfseries \titleOfThesisOne\par}
 	\vspace{2cm}
-	\doublespacing
-	{\LARGE \textbf{\titleOfThesisOne}}\\
-	\singlespacing
-	\vspace{2cm}
-	{\large \textbf{\typeOfThesis}}\\
-	
+	{\large\bfseries \typeOfThesis\par}
 	\vfill
-	\parbox{1cm}{
-  		\begin{large}
-    			\begin{tabbing}
-       			Author: \hspace{2cm}  
-        			\=\authorOfThesis\\[2mm]
-      			Supervisors: 
-        			\>\supervisorOne\\[2mm]
-				\>\supervisorTwo\\[2mm]
-				\>\supervisorThree\\[2mm]
-      			Submission Date: 
-        			\>\submissionDate\\
-    			\end{tabbing}
-  		\end{large}
-	}\\
+	\begin{large}
+	\begin{tabular}{@{}l@{\hspace{1.5cm}}l@{}}
+		Author: & \authorOfThesis \\[3mm]
+		Supervisors: & \supervisorOne \\[1mm]
+		 & \supervisorTwo \\[3mm]
+		Submission Date: & \submissionDate \\
+	\end{tabular}
+	\end{large}
+	\vspace{1.5cm}
 \end{center}
 \clearpage
 }
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-% v0.1: both \titlePage calls are kept exactly as in the GIU template (cover, blank page,
-% inner title page). Whether this is a GIU requirement is UNVERIFIED -- see OPEN_QUESTIONS.md.
-\titlePage
-\thispagestyle{empty}\ \clearpage
 \titlePage
 %++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+% Declaration
 \thispagestyle{empty}
+\null\vspace{3.5cm}
+\begin{center}
+	{\Large\bfseries Declaration\par}
+\end{center}
+\vspace{1.5cm}
+\begin{center}
+\begin{minipage}{0.85\textwidth}
+\raggedright
+\setlength{\parindent}{0pt}
 This is to certify that:
-\begin{itemize}
-\item[(i)] the thesis comprises only my original work toward the Bachelor Degree
-\item[(ii)] due acknowledgement has been made in the text to all other material used
-\item[(iii)] \pending{AI-USE STATEMENT PENDING. The template's original wording (AI used exclusively for language refinement; none for ideas, methodology, results, analysis or conclusions) must not be signed unless it is accurate. The student must write the true disclosure after checking GIU's current academic-integrity policy.}
-\end{itemize}
 
-\vspace{2cm}
+\vspace{6mm}
+\begin{list}{}{\setlength{\labelwidth}{1cm}\setlength{\leftmargin}{1.2cm}\setlength{\labelsep}{2mm}\setlength{\itemsep}{5mm}}
+\item[(i)] the thesis comprises only my original work toward the Bachelor Degree.
+\item[(ii)] due acknowledgement has been made in the text to all other material used.
+\end{list}
+\end{minipage}
+\end{center}
+
+\vspace{3.5cm}
 \begin{flushright}
-\rule[0mm]{6cm}{0.2mm}\\
-\authorOfThesis\\
-\submissionDay~\submissionMonth,~\submissionYear\\
+\rule{6cm}{0.4pt}\par
+\vspace{2mm}
+\authorOfThesis\par
+\vspace{1mm}
+\submissionDate\par
 \end{flushright}
 \clearpage

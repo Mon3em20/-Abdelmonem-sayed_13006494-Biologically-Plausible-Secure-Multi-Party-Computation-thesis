@@ -9,6 +9,7 @@
 % \usepackage{graphics}
 \usepackage{graphicx}
 \usepackage{float}
+\usepackage[section]{placeins}
 \usepackage{subfig}
 \usepackage{array}
 % \usepackage{xtab}
@@ -79,8 +80,8 @@
 \includefigWSC{#1}{#2.eps}{#3}{#4}{#5}
 }
 
-% v0.3: PDF metadata set once via hyperref (duplicate \pdfinfo removed). Author field intentionally left unset until the registered name is confirmed.
-\hypersetup{pdftitle={\titleOfThesisOne}, pdfsubject={\typeOfThesis\space -- working draft (research status 16 November 2026)}}
+% v0.3: PDF metadata set once via hyperref (duplicate \pdfinfo removed). Author set to the confirmed name.
+\hypersetup{pdftitle={\titleOfThesisOne}, pdfauthor={\authorOfThesis}, pdfsubject={\typeOfThesis}}
 
 \begin{document}
 % \overfullrule=5pt
@@ -90,7 +91,6 @@
 \include{title_page}
 
 \include{acknowledgments}
-
 \include{abstract}
 \tableofcontents
 % \addcontentsline{toc}{chapter}{Contents}

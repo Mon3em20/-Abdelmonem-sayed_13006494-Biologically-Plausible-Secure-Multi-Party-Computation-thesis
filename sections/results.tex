@@ -5,7 +5,7 @@ This chapter reports all results available on 16 November 2026. Results are grou
 \section{Overview of the Four Experimental Tracks}\label{sec:res-overview}
 Table~\ref{tab:res-overview} summarises the evidence for the four tracks. It is an overview, not a controlled four-way comparison: the plaintext columns aggregate five seeds with validation-selected checkpoints, the Secure BP column is a single run evaluated at the final epoch, and the Secure FF column is empty because that track has not been implemented. The time and communication entries of the plaintext and secure columns have different measurement boundaries and must not be divided into speed-up or overhead factors.
 
-\begin{table}[ht]
+\begin{table}[htbp]
 \centering
 \small
 \setlength{\tabcolsep}{4pt}
@@ -36,7 +36,7 @@ Status & Completed & Completed for one seed & Completed & Not implemented \\
 \section{Plaintext Baselines}\label{sec:res-plain}
 Table~\ref{tab:res-plain} gives the plaintext benchmark (CPU, no \ac{mpc}). Utility was evaluated over five seeds, and timing over three repetitions per seed, which gives 15 timing observations per method; the three repetitions of a seed produced identical accuracies. The $\pm$ values are the sample standard deviation of the per-seed accuracy over the five seeds; recomputed from the per-run records, they are 2.89 and 3.18 percentage points (the population standard deviations would be 2.59 and 2.85). Table~\ref{tab:res-plain-seeds} gives the per-seed test accuracies and the selected checkpoints.
 
-\begin{table}[ht]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}>{\raggedright\arraybackslash}p{8.4cm}cc@{}}
@@ -58,7 +58,7 @@ Validation target 55\% / 60\% / 65\% reached (runs) & 15/15, 15/15, 15/15 & 15/1
 \label{tab:res-plain}
 \end{table}
 
-\begin{table}[ht]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}ccccc@{}}
@@ -79,7 +79,7 @@ Seed & BP test (\%) & BP epoch & FF test (\%) & FF checkpoint \\
 \section{Historical Bounded Secure BP Runs}\label{sec:res-secure}
 Table~\ref{tab:res-secure} lists the three bounded secure \ac{bp} runs on the 784--8--10 network and the 90/30/30 subset. They are development and validation milestones and are not comparable with the full-size run in Section~\ref{sec:res-full}. Communication is global communication; each run's output states that its benchmarks include preprocessing. The round figure is the compiler's virtual-machine count. A0 and A1 are historical runs with class-major ordering; their runtime and communication capture coverage, and possibly their execution conditions, differ, so no speed-up or communication improvement is computed between them. BP-COMP-001 is the comparison-readiness run; its measurement conditions relative to A0 and A1 have not been shown to be directly comparable, so differences between the rows are reported but not interpreted causally.
 
-\begin{table}[ht]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.4cm}>{\centering\arraybackslash}p{2.9cm}>{\centering\arraybackslash}p{2.9cm}>{\centering\arraybackslash}p{3.0cm}@{}}
@@ -109,10 +109,11 @@ For BP-COMP-001 the run log shows training losses of $2.24889$, $1.95888$ and $1
 \section{Full-Size Secure BP Run}\label{sec:res-full}
 The batched-matrix secure \ac{bp} program completed one full-size run (seed 42) on 15 November 2026, with process exit status 0. All values in this section are taken from the run log; they describe one run.
 
+\FloatBarrier
 \subsection{Training and Evaluation}\label{sec:res-full-utility}
 Table~\ref{tab:res-full-train} gives the mean training loss of every epoch and the validation and test results of the final model. The training loss decreases monotonically from 2.27463 to 0.908951 over the five epochs.
 
-\begin{table}[ht]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}lr@{}}
@@ -134,10 +135,11 @@ Test correct & 772/1{,}000 (77.2\%) \\
 \label{tab:res-full-train}
 \end{table}
 
+\FloatBarrier
 \subsection{Paired Seed-42 Comparison with Plain BP}\label{sec:res-paired}
 Table~\ref{tab:res-paired} compares the secure run with the Plain BP run for the same seed recorded in the repository (\texttt{results/baselines/bp.csv}; the same values appear in the benchmark records). The two runs share the split, the training order, the initial parameters, the architecture, the loss, the learning rate, the batch schedule, the number of epochs and the evaluated checkpoint (epoch 5 is also the validation-selected checkpoint of Plain BP for this seed). This is a descriptive single-seed comparison. The Plain BP values are stored with full float precision; the secure values are printed by MP-SPDZ with about six significant digits, so the differences are subject to a display rounding of at most $5\times10^{-6}$. The plaintext run was not repeated for this comparison; its three recorded timing repetitions give identical losses.
 
-\begin{table}[ht]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}lrrr@{}}
@@ -161,10 +163,11 @@ Test correct & 772/1{,}000 (77.2\%) & 772/1{,}000 (77.2\%) & 0 \\
 
 The largest absolute loss difference is $4.42\times10^{-4}$ (validation loss), a relative difference of about 0.06\%. All seven secure loss values are slightly lower than the plaintext values. The counts differ by one validation example and not at all on the test set. Equal or nearly equal aggregate counts do not imply identical per-example predictions or identical parameters, which the secure run does not reveal.
 
+\FloatBarrier
 \subsection{Runtime, Communication and Memory}\label{sec:res-cost}
 Table~\ref{tab:res-cost} lists the cost measurements of the full-size run with the scope of each counter. The figures are not normalised to other environments and must not be combined across rows.
 
-\begin{table}[ht]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.2cm}>{\raggedleft\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{7.0cm}@{}}
@@ -189,10 +192,11 @@ Exit status & 0 & Process completed; does not resolve the truncation-domain mess
 
 The run output also contains the virtual-machine message ``The computation domain is too small for low-round truncation; it would need to have at least 103 bits.'' It is discussed in Section~\ref{sec:disc-trunc}. For orientation only, the MP-SPDZ time corresponds to about 4.7\,s and the global communication to about 26\,MB per optimizer update when averaged over the 200 updates; this average includes evaluation and is not a measured per-update cost.
 
+\FloatBarrier
 \subsection{Integrity Evidence}\label{sec:res-integrity}
 Table~\ref{tab:res-integrity} summarises the integrity checks of the full-size run. The hashes themselves are listed in Appendix~\ref{app:manifest}.
 
-\begin{table}[ht]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{9.2cm}@{}}
@@ -215,5 +219,6 @@ Player-Data backup before the run & 33 files, 40{,}492{,}581 bytes (contents not
 \section{Secure Forward-Forward}\label{sec:res-sff}
 Secure \ac{ff} has not been implemented. No secure \ac{ff} accuracy, runtime, communication or memory value exists, and none is reported. Table~\ref{tab:res-overview} marks the corresponding entries as pending.
 
+\FloatBarrier
 \section{What These Results Do Not Show}\label{sec:res-notshow}
 Because secure \ac{ff} has not been implemented, no per-operation profile of either method exists, and no \ac{mpc}-aware modification has been evaluated, the results do not answer research questions 1--3. They show that plaintext \ac{bp} outperforms plaintext \ac{ff} in test accuracy in this benchmark configuration, that a bounded secure \ac{bp} run executes end to end and agrees closely with an FP64 reference, and that a full-size secure \ac{bp} run on the plaintext configuration completes on one host and agrees closely with the matching plaintext run for one seed.
