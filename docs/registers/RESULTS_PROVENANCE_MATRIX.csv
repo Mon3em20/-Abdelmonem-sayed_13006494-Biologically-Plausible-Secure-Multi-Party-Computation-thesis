@@ -1,0 +1,31 @@
+claim_or_value,thesis_location,source_file,exact_evidence_location,verification_status,notes
+Plain BP test accuracy 75.96 +/- 2.89 (5 seeds),Table 7.2 / 7.3,results/benchmarks/plaintext/runs.csv + summary.csv,per-seed test_accuracy_pct 77.2/74.3/71.7/78.2/78.4,Recomputed from raw per-run CSV (sample sd 2.890; population sd 2.585),Sample SD confirmed via statistics.stdev in benchmark harness
+Plain FF test accuracy 59.76 +/- 3.18 (5 seeds),Table 7.2 / 7.3,results/benchmarks/plaintext/runs.csv + summary.csv,per-seed 62.7/55.5/59.9/57.8/62.9,Recomputed (sample sd 3.182; population sd 2.846),
+Plain BP/FF validation of selected checkpoint 76.64+/-1.76 and 61.64+/-3.22,Table 7.1 / 7.2,results/benchmarks/plaintext/runs.csv,best_validation_accuracy_pct column,Recomputed in this audit (not previously reported),Selected-checkpoint validation; not a final-epoch value
+Plain BP training time 1.467 s; FF 3.118 s (15 obs),Table 7.2,results/benchmarks/plaintext/summary.csv,mean_training_seconds,Recomputed from runs.csv,Plaintext training loop only; hardware not recorded
+Optimizer updates 200 (BP) vs 400 (FF); presentations 25000 vs 100000,Table 7.2 / Sec 4.4,runs.csv,optimizer_updates; training_presentations,Read from raw CSV,
+Plain BP seed-42 epoch losses 2.2747019737243654 ... 0.9091569893836975,Table 7.5,results/baselines/bp.csv,record_type=epoch seed=42 train_loss,Read from raw CSV; identical over 3 repetitions,Baseline NOT re-run in this audit
+Plain BP seed-42 val loss 0.7881155166625976 / val acc 76.6 / test loss 0.778144187927246 / test 77.2,Table 7.5,results/baselines/bp.csv; runs.csv,seed_summary seed=42,Read from raw CSV,Epoch 5 is the selected checkpoint for seed 42
+Secure BP program SHA-256 8134dd8d...583fd,App A,mpc/programs/bp/bp_matched_matrix.mpc,sha256sum in WSL checkout at commit ef00de1,Recomputed this audit,Windows clone hash differs only through CRLF conversion
+Input hashes P0/P1/P2 fde787c8.../acc6fed9.../c201ace1...,App A,~/secure-bp-runs/SECURE-BP-MATCHED-v1_seed42_corrected/Input-P*-0,sha256sum,Recomputed this audit,Raw files not copied into thesis package
+Input verification all_pass true,Table 7.7,verification_summary.json (same bundle),checks object,Read this audit; verifier not re-run,
+Full-run log SHA-256 92c7192a...17f1 (5911 bytes),App A,.../SECURE-BP-MATCHED-MATRIX-v1_full_seed42_run_20261115_234946/full.log,sha256sum,Computed this audit,Hash not previously recorded
+Secure BP epoch losses 2.27463/2.16141/1.84132/1.30545/0.908951,Table 7.4,full.log,lines epoch=1..5,Read from log,Single run seed 42
+Secure BP validation 0.787674 767/1000; test 0.77771 772/1000,Table 7.4,full.log,validation/test lines,Read from log,Final-epoch model
+MP-SPDZ Time 933.263 s,Table 7.6,full.log,'Time = 933.263 seconds' after 'including preprocessing (offline phase)',Read from log; wording verified in Processor/BaseMachine.cpp:print_timers,Timer starts at program run (Machine.hpp run()); excludes compilation per source reading
+External elapsed 15:48.40; max RSS 768248 KB; user 730.01 s; system 1933.05 s; exit 0,Table 7.6,full.log,/usr/bin/time -v block,Read from log,Command timed = compile-run.py (compile + run); 15.1 s difference NOT decomposed
+Party-0 data 1497.67 MB / ~8928348 rounds; global 5224.49 MB,Table 7.6,full.log,Data sent / Global data sent lines,Read from log; print sites verified in BaseMachine.cpp,Different counters from compiler VM rounds
+Compiler VM rounds 5638872; truncations 91680035,Table 5.1 / 7.6,full.log + results/mpc/bp/matrix_matched_v1_preflight/compile_only_matrix_matched_ring.txt,compiler summary,Read from two records that agree,Compile-time statistic
+Scalar program 19965875172 VM rounds; 6638164835 truncations,Table 5.1,results/mpc/bp/matrix_matched_v1_preflight/compile_only_scalar_matched_ring.txt,compiler summary,Read,Compile-only; not executed
+Matrix multiplications total 1660,Table 5.1,compile_only_matrix_matched_ring.txt,sum of matrix multiplication lines,Computed this audit,
+Truncation-domain message (103 bits),Sec 8.6,full.log; MP-SPDZ Processor/Machine.hpp:suggest_optimizations + Processor/TruncPrTuple.h,message site and small_gap logic,Source read; interpretation NOT independently reviewed,UNRESOLVED; supersedes earlier project note
+Smoke run loss 2.30479 / val 2.29572 15/100 / test 2.28882 19/100,Sec 5.8,SECURE-BP-MATCHED-MATRIX-v1_smoke_seed42_run_20261115_232534/smoke.log; expected_python_reference.json,Read,Within pre-registered tolerance 8.6e-5
+Player-Data backup 33 files 40492581 bytes,Table 7.7,~/secure-bp-runs/player-data-backup_before_full_20261115_234946,file count and byte sum by size only,Recomputed this audit without reading contents,Directory du reports 40492617 incl. directory entries; file bytes 40492581
+Execution host i5-11320H / 8 CPUs / ~11 GiB / Ubuntu 26.04.1 WSL2,Table 6.5,live inspection of WSL host on 2026-11-16,uname/cpuinfo/free,Inspected AFTER the run; not in run artifacts,Reported as likely not recorded environment
+BP-COMP-001 values (13/30 14/30 etc.),Table 7.3,results/mpc/bp/comparison_baseline/BP-COMP-001/runtime.log,epoch/validation/test lines,Read from log,Unchanged from v0.3
+A0 log lacks trunc_pr/split options (suggestion printed),Sec 8.7,results/mpc/bp/training/runtime.log,tail of log,Read; compile record of A0 not available,Plausible but unverified cause of A0 communication
+Salam et al. author list,references.bib,Crossref API 10.1109/ACCESS.2023.3339750,authors,Verified online,6 authors
+Lu Basaran Guler TIT 70(11) 8204-8236,references.bib,Crossref + paper PDF read,title/authors/volume/pages,Verified online; text read (intro/problem/experiments),
+Santos et al. Curl ePrint 2024/1127,references.bib,eprint.iacr.org/2024/1127 page,title/authors/abstract,Abstract-level only; full PDF returned HTTP 403,Precise functionality/leakage qualification NOT checked
+Truncation attribution (Dalskov et al. / ePrint 2018/403),none (removed from thesis),MP-SPDZ README.md 220-221; Compiler/instructions.py 1225; Protocols/Replicated.hpp 452,source comments,UNRESOLVED,Source attributes truncation to Dalskov et al. (2019/131; 2020/1330) and cites 2018/403 in the implementation; papers not read; no citation in thesis
+Secure FF anything,-,-,-,Not implemented,No values exist

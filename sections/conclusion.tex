@@ -1,0 +1,21 @@
+\chapter{Conclusion and Future Work}\label{chap:concl}
+
+\section{Interim Conclusion}\label{sec:concl-interim}
+This chapter is an interim conclusion that reflects the state of the project on 16 November 2026. The study is not complete: secure \ac{ff}, the core secure comparison, the profiling and the \ac{mpc}-aware modification have not been carried out, and no conclusion about whether a biologically inspired learning rule reduces the cost of secure training can be drawn yet.
+
+The work completed so far establishes three things. First, in a common plaintext benchmark on a 5{,}000/1{,}000/1{,}000 MNIST split, \ac{bp} reached $75.96\pm2.89\%$ and \ac{ff} $59.76\pm3.18\%$ test accuracy over five seeds, with \ac{ff} performing twice as many optimizer updates; the configurations and budgets of the two methods are documented and differ. Second, secure \ac{bp} training under MP-SPDZ's three-party, semi-honest, honest-majority replicated-ring protocol progressed from bounded scalar prototypes to a batched-matrix program, and the change of formulation, not of learning rule, reduced the compiled round count by more than three orders of magnitude and made full-size training feasible. Third, one full-size secure \ac{bp} run (784--128--128--10, seed 42) completed on a single host in 933.263\,s of MP-SPDZ time with 5{,}224.49\,MB of global communication, and reached 77.2\% test accuracy; its losses agree with the matching Plain BP run within $4.42\times10^{-4}$, and its test count is identical.
+
+These results provide a validated secure \ac{bp} baseline against which secure \ac{ff} can be measured under the same protocol, data and implementation style. They carry clear limits: one secure seed, a single host without network emulation, two runtime measurements with different scopes, and an unresolved truncation-domain message.
+
+\section{Future Work}\label{sec:concl-future}
+The remaining work, in order of priority, is:
+\begin{enumerate}
+  \item \emph{Secure FF implementation and evaluation.} Implement \ac{ff} in MP-SPDZ under the same protocol, fixed-point type, data split and batched-matrix style as secure \ac{bp}, including secure negative-label generation, the softplus goodness loss, L2 normalisation and candidate-label inference; validate it against a plaintext reference with a smoke run before a full run.
+  \item \emph{Evaluation policy.} Fix the checkpoint policy (final epoch or validation-selected) for all secure and plaintext comparisons before further seeds are run.
+  \item \emph{Additional Secure BP seeds and repeated runs.} Run seeds 43--46 and repeat selected seeds to estimate variation in utility, runtime and communication.
+  \item \emph{Truncation analysis.} Analyse the truncation-domain message: confirm which truncation variant is executed, its cost, numerical behaviour and leakage, and whether a larger ring or another precision changes the results.
+  \item \emph{Timing scope and provenance.} Record per-party timings, separate online and preprocessing cost where the framework allows, record the host description with every run, and archive complete logs in a controlled evidence location without secret material.
+  \item \emph{Controlled network experiments.} If time allows, measure both secure methods under emulated LAN and WAN conditions, since round counts affect distributed runtime.
+  \item \emph{Profiling, modification and final comparison.} Profile both secure methods per operation (RQ2), design and evaluate one bottleneck-motivated modification of \ac{ff} with an ablation (RQ3), and carry out the final matched comparison of all four tracks (RQ1).
+\end{enumerate}
+The final conclusion of the thesis will be written only after these results exist; it may support, qualify or contradict the central hypothesis.

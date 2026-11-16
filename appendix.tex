@@ -1,0 +1,78 @@
+\appendix
+\renewcommand{\appendixtocname}{Appendix}
+\renewcommand{\appendixpagename}{\appendixtocname}
+\addappheadtotoc
+\setboolean{@twoside}{false}
+\appendixpage
+
+\chapter{Evidence Manifest}\label{app:manifest}
+This appendix lists the provenance of the full-size secure \ac{bp} run so that the run can be checked and, in a separate controlled environment, repeated. Paths beginning with \texttt{\textasciitilde/} are on the execution host and are not part of the repository; repository paths are relative to its root. Secret-bearing material (MP-SPDZ \texttt{Player-Data}, party keys and certificates, the raw party input files) is deliberately excluded from the thesis package. All hashes are SHA-256 and were recomputed for this thesis version on 16 November 2026, without executing any MPC program.
+
+{\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{3.8cm}>{\raggedright\arraybackslash}p{10.0cm}@{}}
+\caption{Evidence manifest of the full-size secure \ac{bp} run (seed 42).}\label{tab:app-manifest}\\
+\toprule
+Item & Value \\
+\midrule
+\endfirsthead
+\toprule
+Item & Value \\
+\midrule
+\endhead
+Program & \texttt{mpc/programs/bp/bp\_matched\_matrix.mpc} \\
+Program SHA-256 & \texttt{8134dd8d17e4338c\allowbreak ab489c79823d1b91\allowbreak 38487e7aab599c3c\allowbreak 637dd6ee505583fd} \\
+Configuration & \texttt{configs/bp\_matched.yaml} \\
+MP-SPDZ & v0.4.4, commit \texttt{113c4e47dd94bca9\allowbreak ecab029d2f0abe64\allowbreak 9bea5c52} \\
+Repository commit (evidence) & \texttt{ef00de17b88a98f5\allowbreak babeb1d8778c2405\allowbreak 65f1cdf5} (program, verifier and evidence record committed) \\
+Input generation commit & \texttt{974e202} with uncommitted changes (recorded in the bundle metadata) \\
+Input bundle & \texttt{\textasciitilde/secure-bp-runs/\allowbreak SECURE-BP-MATCHED-v1\_\allowbreak seed42\_\allowbreak corrected/} \\
+Input-P0-0 SHA-256 & \texttt{fde787c8020d23e6\allowbreak def405f7d4bf2576\allowbreak 8b96ce28b1b619a5\allowbreak 0447705f11fbbaf4} \\
+Input-P1-0 SHA-256 & \texttt{acc6fed99ad53289\allowbreak 9e20348587ab3f7c\allowbreak 895e0d7e2a868338\allowbreak 0d390534d9cf2080} \\
+Input-P2-0 SHA-256 & \texttt{c201ace19761080c\allowbreak 0d555fbb43d21749\allowbreak f9742fb930b70dd0\allowbreak ce00aca547e47262} \\
+Input token counts & P0 7{,}266{,}664; P1 7{,}146{,}794; P2 7{,}142{,}824 \\
+Input verification & \texttt{verification\_summary.json}: \texttt{all\_pass: true} \\
+Full-run log & \texttt{\textasciitilde/secure-bp-runs/\allowbreak SECURE-BP-MATCHED-MATRIX-v1\_\allowbreak full\_\allowbreak seed42\_\allowbreak run\_\allowbreak 20261115\_\allowbreak 234946/\allowbreak full.log}; 5{,}911 bytes \\
+Full-run log SHA-256 & \texttt{92c7192aa86252aa\allowbreak 963bcc4554ed2616\allowbreak 9d8897048f4243f1\allowbreak b061f90f161d17f1} \\
+Compiled program hash (printed by the compiler) & \texttt{1636dd29ece205a0\allowbreak d3adf9fb6e07f2e8\allowbreak d19f2504ad7ea9ef\allowbreak 48ebf223aa113ca0} \\
+Player-Data backup & \texttt{\textasciitilde/secure-bp-runs/\allowbreak player-data-backup\_\allowbreak before\_\allowbreak full\_\allowbreak 20261115\_\allowbreak 234946}; 33 files, 40{,}492{,}581 bytes; contents not read \\
+Repository evidence record & \texttt{docs/experimental-results/\allowbreak secure-bp-full-run/} (report, results, integrity manifest, open issues) \\
+Plain BP reference & \texttt{src/baselines/bp.py}; \texttt{results/baselines/bp.csv}; \texttt{results/benchmarks/plaintext/runs.csv} \\
+\bottomrule
+\end{longtable}
+}
+
+\chapter{Lists}
+\phantomsection
+\addcontentsline{toc}{section}{List of Abbreviations}
+\begin{acronym}[\hspace{3cm}]
+  \acro{ppml}[PPML]{Privacy-Preserving Machine Learning}
+  \acro{mpc}[MPC]{Secure Multi-Party Computation}
+  \acro{fhe}[FHE]{Fully Homomorphic Encryption}
+  \acro{he}[HE]{Homomorphic Encryption}
+  \acro{dp}[DP]{Differential Privacy}
+  \acro{fl}[FL]{Federated Learning}
+  \acro{bp}[BP]{Backpropagation}
+  \acro{ff}[FF]{Forward-Forward}
+  \acro{pff}[PFF]{Pipeline Forward-Forward}
+  \acro{ann}[ANN]{Artificial Neural Network}
+  \acro{llm}[LLM]{Large Language Model}
+  \acro{stdp}[STDP]{Spike-Timing-Dependent Plasticity}
+  \acro{snn}[SNN]{Spiking Neural Network}
+  \acro{lif}[LIF]{Leaky Integrate-and-Fire}
+  \acro{mlp}[MLP]{Multilayer Perceptron}
+  \acro{sgd}[SGD]{Stochastic Gradient Descent}
+  \acro{rss}[RSS]{Replicated Secret Sharing}
+  \acro{ttp}[TTP]{Trusted Third Party}
+  \acro{god}[GOD]{Guaranteed Output Delivery}
+  \acro{lan}[LAN]{Local-Area Network}
+  \acro{wan}[WAN]{Wide-Area Network}
+\end{acronym}
+\clearpage
+% List of Figures restored because the thesis now contains figures (Chapters 4 and 5).
+\phantomsection
+\addcontentsline{toc}{section}{List of Figures}
+\listoffigures
+\clearpage
+\phantomsection
+\addcontentsline{toc}{section}{List of Tables}
+\listoftables

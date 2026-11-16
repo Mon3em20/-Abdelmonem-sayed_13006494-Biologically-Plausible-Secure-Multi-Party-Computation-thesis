@@ -1,0 +1,36 @@
+claim,source_or_experiment,evidence_location,verification_status,limitation,chapter
+Secret sharing often faster than HE but may need more communication in surveyed systems (trend),zhou2024smpc,survey,Source read by author; PDF in workbook archive,"Trend, not law","2,3"
+MP-SPDZ: one interface/compiler/VM for many protocols and security settings,keller2020mpspdz,paper,Read by author,Protocol must be named,"2,3"
+"CrypTen: PyTorch-like MPC, semi-honest, trusted party role; evaluations mostly inference",knott2021crypten,paper,Read by author,No generalised slowdown figure used,"2,3"
+"ESMPC: >30% (AlexNet) and >45% (FCNN, LeNet, ViT) 2PC training-time reduction; >45% all four in 3PC vs Piranha baseline",yang2025esmpc,abstract,Abstract-level; dossier,Baseline-specific,3
+"Falcon: ~6x vs SecureNN, 4.4x vs ABY3, 2-60x less communication; compute dominates large nets in WAN; excludes output inference attacks",wagh2021falcon,paper,Read by author,Own setup,"2,3"
+Keller-Sun: MNIST CNN ~99.2% in ~3.5 h (3-party honest majority); exp/inverse-sqrt protocols,keller2022sqt,paper,Read by author,Large models; not comparable,"2,3"
+Keller-Sun note: max-pooling backward error explains accuracy gap,keller2023note,ePrint 2023/1219,Read by author; PDF not in project archive; not re-inspected in v0.3,Correction note only,3
+CryptGPU: GPU replicated-sharing secure learning; baseline/batch-dependent speedups,tan2021cryptgpu,paper,Read by author,No headline multiplier used,3
+Zhang et al.: Shamir; Winograd 36->16 mults for 2x2/3x3 convolution; approximate softmax; protocol-level evaluation,zhang2025efficient,paper,Read by author,Not full training benchmark,"2,3"
+"Das et al.: DP-MPC two-party; 56-794x comm, 16-182x runtime vs prior secure-and-private protocols; some baselines lower-bound estimates",das2025dpmpc,paper,Read by author,DP+MPC,3
+Sequre: compiler/runtime for biomedical MPC; auxiliary trusted dealer,smajlovic2023sequre,paper,Read by author,Not NN-training benchmark,3
+"SWIFT: LR training/inference and DNN inference (LeNet, VGG16) in 64-bit-ring WAN; NN training left as future work (mixed-world conversions)",koti2021swift,arXiv 2005.10296 text read in v0.3 and dossier,Verified in v0.3 against arXiv text,Does not train DNNs,3
+BEACON: 2-party semi-honest secure floating-point training; multi-fold gains vs tested baselines,rathee2023beacon,paper,Read by author,No generalisation,"2,3"
+"SecP-Tuning: MPC forward-only prompt tuning; 12x/16x acceleration, 17x/20x less communication (abstract); not FF",luo2026secptuning,abstract,Abstract-level; PDF not in project archive; 73% figure removed,"LLM, data-owner interaction","2,3"
+"Comet: MPC private LLM inference; 1.87-2.63x speedup, 1.94-2.64x less communication; pages 2827-2845",yan2025comet,abstract/proceedings,Abstract-level; PDF not in project archive,Inference only,3
+"Hinton FF: two passes, local goodness, preliminary, small networks; not gradient-free",hinton2022ff,paper,Read by author,,"2,3"
+"PFF: 3.75x (98.51% vs 98.52%; 2980.76 s vs 11190.72 s), 4 nodes, no cryptography; venue NETYS 2025 / LNCS 15736 (2026)",aktemur2025pff,paper + Sabanci repository record,Venue verified online in v0.2; numbers from workbook,"Distributed, not MPC",3
+FedFwd: FF-style local training in FL; depends on data distribution,park2023fedfwd,workshop paper,Read by author,Not MPC,3
+"SCFF: 98.70+/-0.01% MNIST MLP, 99.37+/-0.06% CNN, 80.75+/-0.12% CIFAR-10, 77.30+/-0.12% STL-10; STL-10 fine-tuning uses BP",chen2025scff,paper,Read by author; dossier,Not MPC,3
+DP-ULR: forward learning with DP; not FF; not MPC,feng2025fwdp,arXiv 2504.00411,Read by author; PDF not in project archive,,3
+Aribe: SNN review; some hardware figures taken from literature,aribe2025snn,paper,Read by author,,"2,3"
+SpyKing: BFV FHE; PyTorch training then encrypted evaluation; decrypt/re-encrypt around nonlinear layers,nikfam2025spyking,Frontiers record (searched v0.3),Dossier + online record; PDF not in project archive,"FHE, not MPC","2,3"
+PrivateSNN: data/class leakage in ANN-to-SNN conversion; <2% drop; not a secure-computation protocol,kim2022privatesnn,AAAI 2022,Read by author; PDF not in project archive,,3
+"Salam et al.: HE+federated collaboration (adjacent, not secret-sharing MPC)",salam2023mpppml,IEEE Access 11,Metadata from dossier; author list shortened ('and others') pending full record,Terminology inconsistent in paper,3
+"Zhou 2026: Shamir over Galois rings, RMFE packing, mixed circuits; 71.4-75.1% comm reduction, 55.3-70.1% LAN online speedup, 5.3-68.1% WAN vs its baseline",zhou2026rmfe,AAAI-26 paper (dossier),"Supplementary (not one of the 23); from dossier, PDF not inspected in v0.3",Own environment; not FF,3
+"Elnady et al. 2026: FF vs BP on six datasets, hyperparameter optimisation; implementations not matched; no cryptography",elnady2026ff,AI Review 59:232 (dossier),"Supplementary; from dossier, not inspected in v0.3",Not privacy work,3
+He init (variance 2/n_in) for ReLU; Glorot/Xavier scales by fan-in/out,he2015delving; glorot2010understanding,papers + repo implementation,Implementation read in bp_training_reference.py,No claim of universal superiority,4
+Preliminary gap: reviewed literature did not identify controlled matched FF-vs-BP comparison under one MPC configuration,Proposal 2.5 + v0.3 additions,Ch.3 Sec. 3.9,"Qualified, non-exhaustive search to 11 Oct 2026",Not a novelty claim,3
+"sfix(16,31): 16 fractional bits, 31 bits, range ~[-16384,16384), step 2^-16",Pinned MP-SPDZ source (set_precision docstring) commit 113c4e47...,Compiler/types.py,Verified in v0.3,Documentation-level range,"2,4"
+Probabilistic truncation rounds down/up with probability by discarded remainder; MP-SPDZ warns of leakage,Pinned source (floatingpoint.py/program.py),Compiler/,Verified in v0.3,Branch executed not analysed,"2,4"
+"use_split(3) = three-way share split for nonlinear ops, not party count; ring execution path enables use_trunc_pr and use_split(3)","Pinned source (compilerLib.py, comparison code)",Compiler/,Verified in v0.3,,"2,4"
+"PT-BENCH-v1 results (5 seeds, 15 timing obs.)",PT-BENCH-v1,Ch.7 Table 7.1,Audited,Plaintext only,7
+A0/A1/BP-COMP-001 secure runs values,"SBP-A0, SBP-A1, BP-COMP-001",Ch.7 Table 7.2,BP-COMP-001 and A1 raw artifacts inspected; A0 reported,No causal comparison; single runs,7
+BP-COMP-001 close aggregate agreement with FP64 (<=~1.5e-4 loss diff),BP-COMP-001,"fp64_reference.json, runtime.log",Inspected,Not bit-exact; aggregates only,7
+Hardware/network not recorded; all parties on localhost,BP-COMP-001,runtime.log command line,Inspected,No CPU/RAM/OS data,6

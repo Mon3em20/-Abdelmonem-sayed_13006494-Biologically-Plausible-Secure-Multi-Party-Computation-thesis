@@ -1,0 +1,133 @@
+\chapter{Experimental Setup}\label{chap:setup}
+
+This chapter lists the configurations of all experiments reported in Chapter~\ref{chap:results}. The plaintext benchmark, the historical bounded secure runs and the full-size secure run are separate experimental regimes and are described in separate tables. Measurement definitions are given in Section~\ref{sec:method-measure}.
+
+\section{Data}\label{sec:setup-data}
+All experiments use MNIST (28$\times$28 grey-scale digits, 784 input values, 10 classes). Table~\ref{tab:setup-data} lists the splits.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{4.4cm}>{\raggedright\arraybackslash}p{5.8cm}@{}}
+\toprule
+Regime & Train / validation / test & Source of the examples \\
+\midrule
+Plaintext benchmark (Plain BP, Plain FF) & 5{,}000 / 1{,}000 / 1{,}000 & Train and validation: first 5{,}000 and next 1{,}000 positions of a seed-42 permutation of the official training set; test: positions 1{,}000--1{,}999 of a seed-42 permutation of the official test set \\
+Full-size Secure BP & 5{,}000 / 1{,}000 / 1{,}000 & Same split function and indices as the plaintext benchmark \\
+Bounded Secure BP (A0, A1, BP-COMP-001) & 90 / 30 / 30 & Class-balanced subset, selection seed 42; 30 / 10 / 10 per party \\
+\bottomrule
+\end{tabular}
+\caption{Data splits of the three experimental regimes.}
+\label{tab:setup-data}
+\end{table}
+
+\section{Plaintext Benchmark}\label{sec:setup-plain}
+Table~\ref{tab:setup-plain} gives the configuration of the plaintext benchmark (identifier PT-BENCH-v1, profile \texttt{project\_baseline\_standardized}).
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{5.0cm}>{\raggedright\arraybackslash}p{5.2cm}@{}}
+\toprule
+Item & Plain BP & Plain FF \\
+\midrule
+Architecture & 784--128--128--10, ReLU, linear output & 784--128--128, ReLU, L2 normalisation between layers \\
+Parameters & 118{,}282 & 116{,}992 \\
+Initialisation & PyTorch default, \texttt{manual\_seed(seed)} & PyTorch default, \texttt{manual\_seed(seed)} \\
+Objective & Softmax cross-entropy & Per-layer softplus goodness loss, threshold 2.0 \\
+Label handling & Target class & One-hot label in first 10 pixels; negatives with a uniformly random wrong label \\
+Optimizer & \ac{sgd}, learning rate 0.05 & Per-layer \ac{sgd}, learning rate 0.01 \\
+Batch size; epochs & 128; 5 & 128; 5 per layer, layers trained in sequence \\
+Optimizer updates & 200 & 400 \\
+Example presentations & 25{,}000 & 100{,}000 (positive and negative) \\
+Inference & One forward pass, argmax of logits & Ten candidate-label passes, highest goodness summed over both layers \\
+Checkpoint & Best validation accuracy over epochs & Best validation accuracy over layer-2 epochs \\
+Seeds; repetitions & 42--46; 3 timing repetitions per seed & 42--46; 3 timing repetitions per seed \\
+\bottomrule
+\end{tabular}
+\caption{Configuration of the plaintext benchmark PT-BENCH-v1.}
+\label{tab:setup-plain}
+\end{table}
+
+\section{Historical Bounded Secure BP Runs}\label{sec:setup-bounded}
+Table~\ref{tab:setup-secure} lists the configuration of the bounded secure \ac{bp} runs.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.3cm}>{\raggedright\arraybackslash}p{9.6cm}@{}}
+\toprule
+Item & Setting \\
+\midrule
+Framework, protocol & MP-SPDZ v0.4.4; Rep3 Ring; 3 parties; semi-honest, honest majority \\
+Arithmetic & 64-bit ring; \texttt{sfix(16,31)}; probabilistic truncation and \texttt{use\_split(3)} for A1 and BP-COMP-001 (the A0 log suggests that these options were not enabled for A0) \\
+Program & Scalar loops (\texttt{bp\_train.mpc}) \\
+Model & 784--8--10 \ac{mlp}, ReLU hidden layer, linear output layer, 6{,}370 parameters \\
+Data & MNIST subset: 90 train / 30 validation / 30 test; 30/10/10 per party \\
+Training & Batch size 3 (one per party); 30 batches per epoch; 3 epochs; 90 updates; learning rate 0.05; no momentum or weight decay \\
+Loss, output & Stable softmax cross-entropy; aggregate-only outputs \\
+Historical runs (A0, A1) & Class-major batches; deterministic initialisation $(i-j)/1000$, zero biases \\
+BP-COMP-001 & Per-party shuffled order (ordering seed 42042); He (hidden) and Xavier uniform (output) initialisation (seed 42); zero biases \\
+Metrics & Validation/test correct out of 30; losses; MP-SPDZ time; global communication; compiler VM rounds \\
+Repetitions & One run per configuration \\
+Execution host & All three parties on one host (localhost) \\
+\bottomrule
+\end{tabular}
+\caption{Configuration of the bounded secure \ac{bp} experiments.}
+\label{tab:setup-secure}
+\end{table}
+
+\section{Full-Size Secure BP Run}\label{sec:setup-full}
+Table~\ref{tab:setup-full} lists the configuration of the full-size run. All items were checked against the program source, the configuration file \texttt{configs/\allowbreak bp\_\allowbreak matched.yaml}, the input-bundle metadata and the run log.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.3cm}>{\raggedright\arraybackslash}p{9.6cm}@{}}
+\toprule
+Item & Setting \\
+\midrule
+Experiment & SECURE-BP-MATCHED-v1, batched-matrix program, seed 42 \\
+Program & \texttt{mpc/programs/bp/bp\_matched\_matrix.mpc} \\
+Framework, protocol & MP-SPDZ v0.4.4 (commit \texttt{113c4e47}); Rep3 Ring; 3 parties; semi-honest, honest majority \\
+Arithmetic & 64-bit ring; \texttt{sfix(16,31)}; probabilistic truncation; \texttt{use\_split(3)} \\
+Compile and run command & \texttt{compile-run.py -l -M -E ring bp\_matched\_matrix -- -IF <bundle>/Input} \\
+Model & 784--128--128--10, ReLU hidden layers, linear output layer, 118{,}282 parameters \\
+Initialisation & PyTorch default after seed 42, transposed to input-by-output layout; input by party 0 \\
+Data & 5{,}000 / 1{,}000 / 1{,}000 (Table~\ref{tab:setup-data}); example owner = position modulo 3 \\
+Order & Baseline seed-42 data loader order, state continued across epochs \\
+Training & Batch size 128; 39 batches of 128 and one of 8 per epoch (40 batches); 5 epochs; 200 updates; \ac{sgd}, learning rate 0.05, no momentum or weight decay; gradients averaged over the actual batch size \\
+Loss & Stable softmax cross-entropy \\
+Evaluation & Final (epoch-5) model; argmax of logits; chunks of 100 \\
+Disclosure & Mean training loss per epoch; validation and test mean loss and correct count \\
+Repetitions & One run (seed 42); no timing repetitions \\
+Date & 15 November 2026 (run directory timestamp 23:49:46 local time) \\
+\bottomrule
+\end{tabular}
+\caption{Configuration of the full-size secure \ac{bp} run.}
+\label{tab:setup-full}
+\end{table}
+
+\section{Execution Environment}\label{sec:setup-env}
+Table~\ref{tab:setup-env} records what is known about the execution environment. Only information present in the run artifacts is treated as recorded. The host description of the secure runs was obtained by inspecting the machine that holds the run directories on 16 November 2026; it is not part of the run log, so it is reported as the likely, but unverified, environment of the run.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{4.8cm}>{\raggedright\arraybackslash}p{5.4cm}@{}}
+\toprule
+Item & Plaintext benchmark & Secure runs \\
+\midrule
+Software & Python 3.14.4; PyTorch 2.14.1+cpu; 4 threads (recorded) & MP-SPDZ v0.4.4, commit \texttt{113c4e47} (recorded) \\
+Party placement & Not applicable & Three party processes on one host, \texttt{-h localhost} (recorded) \\
+Network & Not applicable & Local loopback connections (recorded command line); no network emulation recorded; no LAN or WAN measurement \\
+Processor & Not recorded & Not recorded in the log; host inspected after the run: Intel Core i5-11320H, 8 logical CPUs visible \\
+Memory & Not recorded & Not recorded in the log; host inspected after the run: about 11\,GiB visible \\
+Operating system & Not recorded & Not recorded in the log; host inspected after the run: Ubuntu 26.04.1 LTS under WSL2 (kernel 6.6.87.2) \\
+\bottomrule
+\end{tabular}
+\caption{Execution environment. ``Recorded'' means present in the experiment artifacts.}
+\label{tab:setup-env}
+\end{table}
+
+Because hardware and network were not recorded in the run artifacts and all parties ran on one host, the runtime and communication figures describe these runs only and are not transferable to other environments.

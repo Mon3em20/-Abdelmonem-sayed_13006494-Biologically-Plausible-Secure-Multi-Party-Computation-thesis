@@ -1,0 +1,46 @@
+\chapter{Introduction}
+\label{chap:intro}
+
+\section{Background and Motivation}\label{sec:intro-motivation}
+Machine learning increasingly relies on large datasets that are often held by different organisations and are sensitive, for example in healthcare and finance. Pooling the raw records may be undesirable or not permitted. \ac{ppml} aims to allow collaborative computation and learning while limiting the exposure of such data. \ac{mpc} is one cryptographic route to this goal: several parties jointly evaluate a function on their private inputs so that, under the assumptions of a stated security model, no party learns more than the outputs it is entitled to \cite{zhou2024smpc,keller2020mpspdz}.
+
+The practical difficulty addressed in this thesis is cost. Secure training replaces ordinary arithmetic by secret-shared arithmetic that requires interaction between the parties, and operations such as comparison, truncation, exponentiation and division are considerably more expensive than additions and multiplications \cite{keller2022sqt,zhang2025efficient}. Existing efficiency work mostly keeps the learning algorithm fixed and improves the secure-computation stack \cite{yang2025esmpc,wagh2021falcon,keller2022sqt,tan2021cryptgpu,lu2024clover}. The learning algorithm, however, determines which operations must be evaluated securely and which intermediate values must be kept. This motivates the question of whether the learning rule can be co-designed with \ac{mpc} instead of applying \ac{mpc} to \ac{bp} unchanged.
+
+\section{Research Problem}\label{sec:intro-problem}
+The thesis studies the \ac{ff} algorithm \cite{hinton2022ff} as the primary alternative learning mechanism. \ac{ff} replaces the forward and backward passes of \ac{bp} by two forward passes, one on positive and one on negative data, and trains every layer with its own local objective. Whether this locality lowers the cost of secure training is not known: possible savings (no backward pass through the network) compete with possible additional costs (two forward passes, secure negative-data generation, per-layer normalisation, a non-linear local loss and a more expensive inference procedure). Speedups of \ac{ff} reported for non-cryptographic distributed training \cite{aktemur2025pff} do not settle the question for \ac{mpc}. The central hypothesis of the project, that co-designing the learning rule and the privacy mechanism can improve the efficiency of privacy-preserving collaborative training, is therefore treated as a hypothesis to be tested and not as an assumption.
+
+\section{Research Questions}\label{sec:intro-rq}
+The main research question, as worded in the approved project proposal, is:
+
+\begin{quote}
+Under a fixed \ac{mpc} protocol and threat model, how does Forward-Forward training compare with conventional backpropagation-based training in computation cost, communication cost, and model utility, and can an \ac{mpc}-aware modification of \ac{ff} reduce its dominant secure-computation cost at acceptable utility?
+\end{quote}
+
+It is refined into three sub-questions.
+\begin{description}
+  \item[RQ1 (comparison)] How do secure \ac{ff} and secure \ac{bp} compare in training time, communication volume, communication rounds (where measurable) and accuracy at matched settings?
+  \item[RQ2 (bottlenecks)] Which secure operations dominate the cost of each method?
+  \item[RQ3 (co-design)] Does a bottleneck-motivated modification of the \ac{ff} computation reduce that cost, and at what utility cost?
+\end{description}
+To answer them, the study is organised around four experimental tracks: \emph{Plain BP}, \emph{Secure BP}, \emph{Plain FF} and \emph{Secure FF}. The plaintext tracks fix the learning behaviour of each algorithm without cryptography; the secure tracks measure the same algorithms under one \ac{mpc} configuration.
+
+\section{Objectives and Current Status}\label{sec:intro-status}
+The objectives derived from the research questions are: (O1) establish plaintext baselines for \ac{bp} and \ac{ff} on a common data split; (O2) implement and validate secure \ac{bp} training in MP-SPDZ under a fixed three-party protocol; (O3) implement secure \ac{ff} under the same configuration; (O4) compare the secure methods in cost and utility with repeated runs; (O5) profile the dominant secure operations of both methods; and (O6) design and evaluate one \ac{mpc}-aware modification of \ac{ff} with an ablation.
+
+This document is a working version that records the state of the project on 16 November 2026. Objective O1 is met: Plain BP and Plain FF have been benchmarked over five seeds. Objective O2 is met for one seed: after a series of bounded development runs on a 784--8--10 network, a batched-matrix secure \ac{bp} program trained the full 784--128--128--10 network on the 5{,}000/1{,}000/1{,}000 MNIST split under the three-party replicated-ring protocol, and its seed-42 results agree closely with the recorded Plain BP run for the same seed. Objectives O3--O6 have not started; in particular, \emph{Secure FF has not been implemented or executed}, so RQ1 is only partially addressed and RQ2 and RQ3 remain open.
+
+\section{Contributions}\label{sec:intro-contrib}
+The work completed so far contributes:
+\begin{enumerate}
+  \item a standardised plaintext benchmark of \ac{bp} and \ac{ff} on a common MNIST split with five seeds and documented update and presentation budgets (Chapter~\ref{chap:results});
+  \item an end-to-end secure \ac{bp} training implementation in MP-SPDZ, developed from bounded scalar prototypes to a batched-matrix program that trains a 118{,}282-parameter network on 5{,}000 examples in a single three-party execution (Chapter~\ref{chap:impl});
+  \item a hash-verified, single-seed measurement of the utility, runtime, communication and memory of that secure run, together with a paired numerical comparison against the matching plaintext run (Chapter~\ref{chap:results}); and
+  \item an evidence record (program and input hashes, input-stream verification, separated measurement scopes and an explicit list of unresolved technical issues) on which the remaining Secure FF work can build.
+\end{enumerate}
+The intended contributions that remain open are a controlled secure \ac{ff}-versus-\ac{bp} comparison under the same \ac{mpc} configuration, a per-operation cost analysis of both methods, and one evidence-driven \ac{mpc}-aware modification of \ac{ff} with an ablation. Evidence that \ac{ff} offers no advantage under \ac{mpc} would be a valid outcome.
+
+\section{Scope and Limitations}\label{sec:intro-scope}
+The thesis does not propose a new cryptographic protocol or security model. Every security statement refers only to the protocol and threat model fixed for the experiments: three parties, a semi-honest adversary and an honest majority. All secure runs so far were executed as three party processes on one host, so they measure the cost of the protocol on that host and not the latency of a distributed deployment. The full-size secure result comes from one seed. Conclusions apply to the evaluated configuration (small fully connected networks on MNIST, one protocol, one host). Optional extensions of the proposal (\acp{snn}, selective activation, further datasets and protocols) are outside the core scope and are mentioned only where they are relevant to the literature.
+
+\section{Thesis Organisation}\label{sec:intro-org}
+Chapter~\ref{chap:background} introduces the concepts needed for the project. Chapter~\ref{chap:litreview} reviews the related literature and states the preliminary research gap. Chapter~\ref{chap:method} describes the experimental design, the four experimental tracks and the comparisons made between them. Chapter~\ref{chap:impl} describes the implementation, including the bounded and the full-size secure \ac{bp} programs. Chapter~\ref{chap:setup} lists the experimental configurations and measurement definitions. Chapter~\ref{chap:results} reports the plaintext baselines, the bounded secure \ac{bp} runs and the full-size secure \ac{bp} run, and Chapter~\ref{chap:discussion} interprets them and states their limitations. Chapter~\ref{chap:concl} gives an interim conclusion and the remaining work.

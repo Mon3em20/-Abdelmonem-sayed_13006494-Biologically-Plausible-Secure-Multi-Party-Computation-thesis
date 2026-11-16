@@ -1,0 +1,138 @@
+\chapter{Background}\label{chap:background}
+
+\begin{sloppypar}
+This chapter introduces the concepts needed to follow the rest of the thesis: the privacy-preserving setting, \ac{mpc} and its security models, replicated secret sharing, fixed-point arithmetic and truncation, the two learning algorithms that are compared (\ac{bp} and \ac{ff}), the secure operations they induce, and the way cost is measured. Statements that come from the literature are cited. Statements about the implementation used in this project refer to MP-SPDZ v0.4.4.
+\end{sloppypar}
+
+\section{Privacy-Preserving Machine Learning}\label{sec:bg-ppml}
+\ac{ppml} denotes techniques that allow models to be trained or evaluated while limiting what is revealed about the underlying data. Surveys describe secure machine learning as built mainly on homomorphic encryption and secret sharing, with different trade-offs between computation, communication, security assumptions and deployment model \cite{zhou2024smpc}. Several paradigms are related but address different threats, and results for one do not transfer automatically to another (Table~\ref{tab:bg-paradigms}).
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{5.4cm}>{\raggedright\arraybackslash}p{6.2cm}@{}}
+\toprule
+Paradigm & What it provides & What it does not provide by itself \\
+\midrule
+\ac{mpc} & Joint computation of a function over private inputs; under the stated model, parties learn only the intended outputs & Protection against what the released outputs reveal (e.g.\ membership or inversion attacks on a published model) \\
+\ac{fhe} / \ac{he} & Computation on ciphertexts, typically performed by one party on data encrypted by another & The interactive, share-based mechanism of \ac{mpc}; costs and trust assumptions differ \\
+\ac{fl} & Training data stay local; model updates are exchanged & A cryptographic guarantee: exchanged updates can leak information unless combined with other mechanisms \\
+\ac{dp} & A statistical bound on what a released output reveals about any individual record & Protection of inputs during the computation; it must be combined with \ac{mpc} for that \\
+\bottomrule
+\end{tabular}
+\caption{Related privacy paradigms and how they are kept apart in this thesis (definitions after \cite{zhou2024smpc,das2025dpmpc}).}
+\label{tab:bg-paradigms}
+\end{table}
+
+These mechanisms can be combined; for example, a protocol can train with \ac{dp} noise inside an \ac{mpc} computation \cite{das2025dpmpc}. This thesis keeps five questions conceptually separate: the cryptographic guarantee of the protocol, the leakage permitted by what is finally released, model utility, computation cost and communication cost.
+
+\section{Secure Multi-Party Computation}\label{sec:bg-mpc}
+In \ac{mpc}, $n$ parties $P_1,\dots,P_n$ hold private inputs $x_1,\dots,x_n$ and want to compute $y=f(x_1,\dots,x_n)$ so that each party learns $y$ (or its designated part of it) and nothing else about the other inputs, beyond what $y$ itself implies. Security is usually defined by comparison with an ideal world in which a trusted party computes $f$: a protocol is secure if anything an adversary can learn in the real execution could also be simulated from its inputs and outputs alone. Two consequences matter for this project. First, the guarantee always holds relative to a specific protocol, adversary model and number of parties. Second, the output of the computation is not protected: if the trained model is released, the leakage it permits is a separate problem from the input privacy of \ac{mpc} \cite{wagh2021falcon}.
+
+Practical frameworks make \ac{mpc} usable for machine-learning workloads. MP-SPDZ offers one high-level interface, compiler and virtual machine for many protocol variants, so that the same computation can be run under different security models \cite{keller2020mpspdz}. CrypTen provides a PyTorch-like interface with automatic differentiation \cite{knott2021crypten}. This project uses MP-SPDZ.
+
+\section{Security Models and Threat Assumptions}\label{sec:bg-security}
+Security models differ along two independent axes \cite{keller2020mpspdz,zhou2024smpc}.
+
+\paragraph{Adversary behaviour.} A \emph{semi-honest} (passive) adversary follows the protocol but tries to learn from the messages it sees. A \emph{malicious} (active) adversary may deviate arbitrarily. Protocols with malicious security differ in what they guarantee when deviation is detected: security with abort stops the computation, whereas \ac{god} ensures that honest parties still receive the output \cite{koti2021swift}.
+
+\paragraph{Corruption threshold.} An \emph{honest-majority} setting assumes fewer than half of the parties are corrupted (for three parties: at most one); a \emph{dishonest-majority} setting allows more. Dishonest-majority protocols generally rely on heavier cryptographic machinery, whereas honest-majority protocols can be considerably cheaper \cite{keller2020mpspdz}. The threat model therefore strongly affects cost, and cost figures from different models are not comparable.
+
+The experiments of this thesis use one configuration: three parties, semi-honest adversary, honest majority (at most one passively corrupted party), as provided by the replicated-ring protocol of MP-SPDZ (referred to as \emph{Rep3 Ring} in this thesis). This is also the main detailed setting of the secure-training experiments of Keller and Sun \cite{keller2022sqt}. Every security statement in the thesis refers only to this configuration. Secure-training systems typically assume static corruption and secure point-to-point channels, and generally leave side-channel and denial-of-service attacks out of scope \cite{yang2025esmpc,wagh2021falcon}.
+
+\section{Secret Sharing and Replicated Sharing}\label{sec:bg-sharing}
+\emph{Additive secret sharing} over a ring $\mathbb{Z}_{2^k}$ splits a value $x$ into shares with $x = x_0 + x_1 + x_2 \pmod{2^k}$. Any proper subset of the shares is uniformly distributed and reveals nothing about $x$. Addition of shared values and multiplication by public constants are local operations; multiplication of two shared values requires interaction.
+
+\emph{Replicated secret sharing} (\ac{rss}) for three parties additionally gives party $P_i$ two of the three additive shares, $(x_i, x_{i+1})$ with indices modulo $3$. Each pair of parties therefore jointly holds all shares, while a single party misses one share. This 2-out-of-3 sharing is used by several three-party training systems \cite{wagh2021falcon,tan2021cryptgpu,keller2022sqt}. As an illustration of the principle (not a description of the exact MP-SPDZ implementation), the product $z = xy$ expands into nine cross terms $x_i y_j$, and party $P_i$ can compute locally the three terms
+\begin{equation}
+  z_i' = x_i y_i + x_i y_{i+1} + x_{i+1} y_i ,
+  \label{eq:rss-mult}
+\end{equation}
+which together cover all nine terms over $i\in\{0,1,2\}$. Re-randomising these partial results with correlated randomness and exchanging them restores a replicated sharing of $z$. The precise message pattern, round count and randomness generation depend on the protocol implementation and are not assumed here. Shamir secret sharing is a different threshold scheme over a finite field or Galois ring, used for example by the protocols of Zhang et al.\ and Zhou \cite{zhang2025efficient,zhou2026rmfe}; it is not the scheme used in this project.
+
+Some systems rely on a trusted party or dealer to generate correlated randomness such as Beaver triples \cite{knott2021crypten,smajlovic2023sequre}. This is an additional assumption and must be stated when results are compared. Protocols are often divided into an input-independent \emph{preprocessing} phase and an \emph{online} phase; the distinction matters for cost measurement (Section~\ref{sec:bg-cost}).
+
+\section{Secure Arithmetic, Fixed-Point Representation and Truncation}\label{sec:bg-fixed}
+Secret-shared arithmetic operates on integers modulo $2^k$ (or a prime), whereas neural networks use real numbers. A \emph{fixed-point} encoding with $f$ fractional bits maps a real $x$ to the integer
+\begin{equation}
+  \tilde{x} = \operatorname{round}\!\left(2^{f}x\right),
+  \label{eq:fixed}
+\end{equation}
+where $\operatorname{round}$ denotes rounding to the nearest integer, so the quantisation step is $2^{-f}$. In MP-SPDZ, \texttt{sfix(f,k)} is such a representation with $f$ fractional bits and $k$ bits in total; the MP-SPDZ documentation describes the default $f=16$, $k=31$ as allowing numbers up to about $2^{k-f-1}=2^{14}=16384$ in magnitude, with a smallest non-zero magnitude of $2^{-16}$. Values outside the representable range wrap around silently; overflow and wrap-around are recognised practical difficulties of \ac{mpc}-based machine learning \cite{knott2021crypten,zhang2025efficient}.
+
+The product of two encoded values carries $2f$ fractional bits and must be \emph{truncated} by $f$ bits to return to the original scale. Exact truncation requires secure bit operations. \emph{Probabilistic truncation} is cheaper: it rounds $a/2^{m}$ randomly down or up, where the probability of rounding up is the discarded fraction $(a \bmod 2^{m})/2^{m}$, so the result is random within a small range around the exact value, provided the operands respect the bit-length assumptions of the construction. MP-SPDZ uses probabilistic truncation by default for fixed-point multiplication and division and offers deterministic rounding to nearest as a more expensive alternative (\texttt{sfix.round\_nearest}), which is not used in this thesis. Keller and Sun use probabilistic truncation in their training protocols and report that lower precision slightly increases error \cite{keller2022sqt}.
+
+The bit-length assumption matters in a ring. In the replicated-ring protocol of MP-SPDZ, a truncation of a $k$-bit value is executed by a cheaper, low-round variant only if $k$ plus a statistical security margin (by default $40$ bits) fits into the ring; otherwise a variant with an additional correction step is used. With a 64-bit ring and $k$ of up to $63$ bits, the margin cannot be met, and the virtual machine reports after the run that the domain is too small for low-round truncation. The consequences of this message for the runs of this project are discussed with the experiments.
+
+Probabilistic truncation also has a security aspect. The MP-SPDZ compiler warns that probabilistic truncation leaks some information and refers to the work of Santos et al.\ \cite{santos2024curl}, whose abstract states that it proves the security of widely used probabilistic-truncation protocols in the stand-alone model. That result is not assumed to extend automatically to every truncation branch of a framework, to the exact variant executed in this project, or to arbitrary composition, so no claim of zero leakage is made in this thesis; the choice is treated as a limitation of the threat-model discussion.
+
+Nonlinear routines such as comparison use, in ring protocols, a local split of each arithmetic share into binary summands (the compiler option \texttt{use\_split}); with value $3$ it refers to a three-way split and not to the number of parties. Floating-point secure training is an alternative representation: BEACON reports secure floating-point training in a two-party semi-honest setting with speedups against the floating-point baselines it tests \cite{rathee2023beacon}. It is not considered further here.
+
+\section{Neural-Network Training Fundamentals}\label{sec:bg-nn}
+A \ac{mlp} with $L$ layers computes, for input $\mathbf{a}^{(0)}=\mathbf{x}$,
+\begin{align}
+  \mathbf{z}^{(l)} &= W^{(l)}\mathbf{a}^{(l-1)} + \mathbf{b}^{(l)}, \quad l=1,\dots,L, \label{eq:mlp-pre}\\
+  \mathbf{a}^{(l)} &= \sigma\!\left(\mathbf{z}^{(l)}\right), \quad l=1,\dots,L-1, \label{eq:mlp-hidden}
+\end{align}
+where $W^{(l)}$ and $\mathbf{b}^{(l)}$ are the weights and biases of layer $l$ and $\sigma$ is the hidden nonlinearity, here the rectified linear unit $\mathrm{ReLU}(z)=\max(0,z)$. The final layer is linear: its pre-activation $\mathbf{z}^{(L)}$ is the vector of logits. For $C$-class classification the probabilities are $p_c = \exp(z^{(L)}_c)/\sum_{j}\exp(z^{(L)}_j)$ and the cross-entropy loss for true class $y$ is $\mathcal{L} = -\log p_y$. Training minimises the average loss by \ac{sgd}: for a mini-batch the parameters $\theta$ are updated as $\theta \leftarrow \theta - \eta\,\nabla_\theta \mathcal{L}$ with learning rate $\eta$. Mini-batches, epochs, learning rate and initialisation are hyperparameters that affect both utility and the number of secure operations.
+
+\section{Backpropagation}\label{sec:bg-bp}
+\ac{bp} computes $\nabla_\theta\mathcal{L}$ by applying the chain rule from the output layer to the input layer. With $\boldsymbol{\delta}^{(l)}=\partial\mathcal{L}/\partial\mathbf{z}^{(l)}$ and the convention of Equations~\eqref{eq:mlp-pre}--\eqref{eq:mlp-hidden},
+\begin{align}
+  \boldsymbol{\delta}^{(L)} &= \mathbf{p} - \mathbf{e}_y, \label{eq:bp-out}\\
+  \boldsymbol{\delta}^{(l)} &= \left(W^{(l+1)\top}\boldsymbol{\delta}^{(l+1)}\right)\odot\sigma'\!\left(\mathbf{z}^{(l)}\right), \quad l=L-1,\dots,1, \label{eq:bp-hidden}\\
+  \frac{\partial\mathcal{L}}{\partial W^{(l)}} &= \boldsymbol{\delta}^{(l)}\mathbf{a}^{(l-1)\top}, \qquad
+  \frac{\partial\mathcal{L}}{\partial \mathbf{b}^{(l)}} = \boldsymbol{\delta}^{(l)}, \quad l=1,\dots,L, \label{eq:bp-grad}
+\end{align}
+where $\mathbf{e}_y$ is the one-hot vector of the true class and $\odot$ the element-wise product. Equation~\eqref{eq:bp-out} holds only for softmax with cross-entropy and a linear-logit output layer. Two properties are important under \ac{mpc}. First, every layer's update depends on the error signal of the layer above, so the backward pass is a sequential dependency across layers and needs the stored forward quantities. Second, the derivative of ReLU is a step function; the implementation used in this project takes $\sigma'(z)=1$ if $0<z$ and $0$ otherwise (so $\sigma'(0)=0$), which in secret-shared form requires a secure comparison. In a related \ac{mpc} setting, SecP-Tuning removes backward propagation and optimisation from the \ac{mpc} computation for LLM prompt tuning, with a data-owner/server interaction that differs from the setting of this thesis \cite{luo2026secptuning}.
+
+\section{Forward-Forward Learning}\label{sec:bg-ff}
+\ac{ff} was proposed by Hinton as a learning procedure motivated by biological plausibility \cite{hinton2022ff}. The global forward-and-backward procedure is replaced by two forward passes: a \emph{positive} pass on real data and a \emph{negative} pass on data that the network should reject. Each layer has its own objective that makes its \emph{goodness} high for positive data and low for negative data. In Hinton's formulation the goodness of layer $l$ is the sum of squared activities,
+\begin{equation}
+  g^{(l)} = \sum_{j} \left(a^{(l)}_j\right)^2 ,
+  \label{eq:goodness}
+\end{equation}
+and the probability that an input is positive is modelled as $\Pr(\text{pos}) = \mathrm{sigmoid}\!\left(g^{(l)}-\theta\right)$ with a threshold $\theta$. A common local loss is the logistic loss of this quantity, which, written with the softplus function $\mathrm{softplus}(u)=\log(1+e^{u})$, is
+\begin{align}
+  \ell^{(l)} &= \mathrm{softplus}\!\left(\theta - g^{(l)}\right)\ \text{for positive data}, \label{eq:ff-loss-pos}\\
+  \ell^{(l)} &= \mathrm{softplus}\!\left(g^{(l)} - \theta\right)\ \text{for negative data}. \label{eq:ff-loss-neg}
+\end{align}
+The output of a layer is length-normalised before it is passed on, so that the next layer cannot simply read the previous layer's goodness. In supervised image classification the label is embedded in the input; positive data carry the correct label and negative data a wrong one \cite{hinton2022ff}. At inference, the network is evaluated once per candidate label and the label with the highest accumulated goodness is chosen; variants instead train a classifier on the layer activities.
+
+Three clarifications keep the description accurate. \ac{ff} avoids propagating a global error signal backwards through the whole network but it is \emph{not gradient-free}: each layer's local objective is still minimised with gradient-based updates, and some variants add a classifier trained with backpropagation \cite{aktemur2025pff,chen2025scff}. Hinton describes the investigations as preliminary, reports results on small networks, and leaves large-scale behaviour open \cite{hinton2022ff}. Finally, \ac{ff} has no inherent cost advantage under \ac{mpc}: removing the global backward pass does not by itself reduce secure cost, because the two passes, secure handling of negative data, normalisation, the nonlinear loss and the inference procedure can all add secure computation.
+
+\section{Secure Operations Relevant to BP and FF}\label{sec:bg-ops}
+Under \ac{mpc}, linear operations on shares are cheap compared to nonlinear ones. Table~\ref{tab:bg-ops} lists the operations expected in each method and how they are typically realised. It is an inventory of \emph{hypotheses} taken from the approved proposal and the literature, not a measurement; per-operation costs are to be established by profiling.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.4cm}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{3.5cm}@{}}
+\toprule
+Step & \ac{bp} & \ac{ff} & Typical secure realisation \\
+\midrule
+Linear layers & $W\mathbf{a}$ in forward and $W^\top\boldsymbol\delta$ in backward pass & $W\mathbf{a}$ in two forward passes & Share multiplications plus truncation \\
+ReLU & Forward value; derivative (step function) in backward pass & Forward value & Secure comparison with zero \\
+Objective & Softmax and cross-entropy & Goodness (squares) and sigmoid/softplus of $g-\theta$ & Exponentiation and division, or approximations \cite{keller2022sqt,zhang2025efficient} \\
+Normalisation & Optional & Length normalisation between layers & Division or inverse square root \cite{keller2022sqt} \\
+Update & Backward products through all layers; stored forward values & Local updates per layer & Share multiplications plus truncation \\
+Data handling & Secret-shared labels & Negative data must be generated without revealing true labels & Secure sampling / label handling \\
+Inference & One forward pass & One pass per candidate label, or auxiliary classifier & As above \\
+\bottomrule
+\end{tabular}
+\caption{Candidate secure-operation inventory for BP and FF, adapted from the approved project proposal; to be established by profiling.}
+\label{tab:bg-ops}
+\end{table}
+
+Protocols for several of these nonlinear operations exist. Falcon gives protocols for ReLU, max-pooling, division and batch normalisation in a three-party replicated setting \cite{wagh2021falcon}. Keller and Sun contribute protocols for exponentiation and inverse square root \cite{keller2022sqt}. Zhang et al.\ propose an approximate softmax for Shamir sharing \cite{zhang2025efficient}. Which primitive dominates the cost of \ac{ff} is unknown and is the subject of research question~2.
+
+\section{Matrix Operations in Secure Training}\label{sec:bg-matrix}
+How a secure computation is \emph{expressed} strongly affects its cost, even when the mathematical function is the same. A fully connected layer applied to a mini-batch can be written either as many scalar multiply-and-add operations or as one matrix product $Z = XW$, where the rows of $X$ are the examples of the batch and $W$ is stored as an input-by-output matrix. In secret-shared arithmetic, every product of two shared fixed-point values needs interaction and a truncation. A scalar formulation therefore pays for one truncation (and, in a naive schedule, one round of interaction) per product, whereas a matrix formulation can accumulate each output element exactly and truncate it once, and can batch the interaction for the whole product. MP-SPDZ exposes such products for shared matrices; the backward pass of \ac{bp} needs the same kind of products in transposed form, $\boldsymbol{\Delta}^{(l)}W^{(l)\top}$ for the error signal and $A^{(l-1)\top}\boldsymbol{\Delta}^{(l)}$ for the weight gradient. Nonlinear steps (the ReLU comparison, the softmax and the logarithm of the loss) remain element-wise secure operations. Matrix formulation changes the cost of the computation, not the learning rule: a batched-matrix program and a scalar program for the same network compute the same \ac{bp} update up to fixed-point rounding.
+
+\section{Measuring Cost under MPC}\label{sec:bg-cost}
+Cost is reported along several dimensions that must not be conflated. \emph{Runtime} can be measured by the framework itself or by an external timer around the command that compiles and launches the parties; the two have different boundaries and are reported separately. Either can include computation, communication, waiting, synchronisation, preprocessing and framework overhead, and a separate pure-computation time is claimed only if it is instrumented. \emph{Online} and \emph{preprocessing} time or communication are distinguished only when the framework reports them separately; the survey of Zhou et al.\ notes that secure preprocessing is often overlooked \cite{zhou2024smpc}. \emph{Global communication volume} is the amount of data sent by all parties together, whereas a per-party figure covers one party only; it must also be stated whether preprocessing is included. Communication volume is not network latency. \emph{Rounds} count sequential interaction steps and matter more under high latency. MP-SPDZ reports two different round figures: the compiler prints a virtual-machine round count, which is a compile-time statistic, and a running party prints an approximate count of its own communication rounds. Neither is a measurement of online network rounds, and the two are not interchangeable. Per-operation costs are reported only if instrumentation exposes them. Frameworks differ in which counters they expose \cite{keller2020mpspdz}, and figures with different measurement boundaries are not comparable.
+
+Which resource dominates depends on the system. ESMPC profiles the bottlenecks of secure training under the Piranha framework and introduces pipeline and communication optimisations for its two- and three-party GPU settings \cite{yang2025esmpc}, whereas Falcon reports that, for large networks over a wide-area network, compute can dominate the cost \cite{wagh2021falcon}. No universal claim about the dominant cost can therefore be made.
+
+\section{Optional Extension: Spiking Neural Networks}\label{sec:bg-snn}
+\acp{snn} encode information in discrete spike events over time. A \ac{lif} neuron integrates its input into a membrane potential that decays over time and emits a spike when the potential crosses a threshold \cite{aribe2025snn}. Under \ac{mpc}, the threshold test is a secure comparison, and the temporal dimension multiplies the amount of computation. For \ac{fhe}-based evaluation, SpyKing reports that the cost of the spiking model depends on the temporal sequence length \cite{nikfam2025spyking}. \acp{snn} are an optional extension of the project and are mentioned here only because they appear in the literature reviewed in the next chapter.

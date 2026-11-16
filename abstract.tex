@@ -1,0 +1,9 @@
+\chapter*{Abstract}
+% \addcontentsline{toc}{chapter}{Abstract}
+\label{chap:abstract}
+% PROVISIONAL abstract describing the state of 16 November 2026. Rewrite after Secure FF results exist.
+Secure multi-party computation (MPC) allows several data owners to train a model jointly without revealing their data, but secure training is far more expensive than ordinary training. This thesis asks whether the biologically inspired Forward-Forward (FF) algorithm, which replaces the backward pass of backpropagation (BP) by two forward passes with layer-local objectives, can reduce the computation and communication cost of secure training under a fixed MPC protocol, and whether an MPC-aware modification of FF can reduce its dominant cost further. The study compares four tracks: Plain BP, Secure BP, Plain FF and Secure FF, using MP-SPDZ with the three-party, semi-honest, honest-majority replicated-ring protocol over a 64-bit ring and 16-bit fixed-point precision.
+
+In a plaintext benchmark on a 5,000/1,000/1,000 MNIST split, BP reached $75.96\pm2.89\%$ and FF $59.76\pm3.18\%$ test accuracy over five seeds, with FF using twice as many optimizer updates. Secure BP was developed from bounded scalar prototypes to a batched-matrix program, which reduced the compiled round count by more than three orders of magnitude. One full-size Secure BP run (784--128--128--10, seed 42) completed on a single host in 933 seconds of MP-SPDZ time with 5.2 GB of global communication and reached 77.2\% test accuracy; its losses agree with the matching plaintext run within $4.4\times10^{-4}$. Secure FF has not yet been implemented, so the main research question remains open.
+
+\pending{Provisional abstract for working version 0.4 (research status 16 November 2026). To be rewritten after Secure FF, profiling and the final comparison are complete.}

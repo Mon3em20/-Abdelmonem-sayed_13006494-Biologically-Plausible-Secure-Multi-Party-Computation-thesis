@@ -1,0 +1,219 @@
+\chapter{Results}\label{chap:results}
+
+This chapter reports all results available on 16 November 2026. Results are grouped by experimental track. Five-seed plaintext aggregates and single secure runs are always labelled as such and are never treated as statistically equivalent. Unless stated otherwise, accuracies are percentages of correctly classified examples, losses are mean cross-entropy values, and $\pm$ denotes the sample standard deviation over seeds.
+
+\section{Overview of the Four Experimental Tracks}\label{sec:res-overview}
+Table~\ref{tab:res-overview} summarises the evidence for the four tracks. It is an overview, not a controlled four-way comparison: the plaintext columns aggregate five seeds with validation-selected checkpoints, the Secure BP column is a single run evaluated at the final epoch, and the Secure FF column is empty because that track has not been implemented. The time and communication entries of the plaintext and secure columns have different measurement boundaries and must not be divided into speed-up or overhead factors.
+
+\begin{table}[ht]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{2.95cm}>{\raggedright\arraybackslash}p{2.95cm}>{\raggedright\arraybackslash}p{2.95cm}>{\raggedright\arraybackslash}p{2.3cm}@{}}
+\toprule
+Metric & Plain BP & Secure BP & Plain FF & Secure FF \\
+\midrule
+Learning algorithm & \ac{bp} & \ac{bp} & \ac{ff} & \ac{ff} \\
+Execution & Plaintext; PyTorch, CPU, float32 & \ac{mpc}; MP-SPDZ, Rep3 Ring, 3 parties, \texttt{sfix(16,31)} & Plaintext; PyTorch, CPU, float32 & Planned: as Secure BP \\
+Architecture & 784--128--128--10 & 784--128--128--10 & 784--128--128 & Pending \\
+Parameters & 118{,}282 & 118{,}282 & 116{,}992 & Pending \\
+Train / val.\ / test & 5{,}000 / 1{,}000 / 1{,}000 & 5{,}000 / 1{,}000 / 1{,}000 (same indices) & 5{,}000 / 1{,}000 / 1{,}000 & Pending \\
+Seed coverage & 5 seeds (42--46) & Single run, seed 42 & 5 seeds (42--46) & Not implemented \\
+Training & \ac{sgd} 0.05; batch 128; 5 epochs; 200 updates & As Plain BP & Per-layer \ac{sgd} 0.01; batch 128; 5 epochs per layer; 400 updates & Pending \\
+Evaluated checkpoint & Best validation epoch & Epoch 5 & Best validation layer-2 epoch & Pending \\
+Test accuracy & $75.96\pm2.89$ (5-seed mean $\pm$ s.d.); seed 42: 77.2 & 77.2 (772/1{,}000), single run & $59.76\pm3.18$ (5-seed mean $\pm$ s.d.) & Pending \\
+Validation accuracy & $76.64\pm1.76$ (5-seed, selected checkpoint); seed 42: 76.6 & 76.7 (767/1{,}000), single run & $61.64\pm3.22$ (5-seed, selected checkpoint) & Pending \\
+Training time & 1.467\,s (training loop; mean of 15 observations) & 933.263\,s MP-SPDZ time; 948.40\,s external elapsed & 3.118\,s (training loop; mean of 15 observations) & Pending \\
+Communication & Not applicable & 5{,}224.49\,MB global; 1{,}497.67\,MB party~0 & Not applicable & Pending \\
+Memory & Not measured & 768{,}248\,KB maximum resident set size (timed process tree) & Not measured & Pending \\
+Status & Completed & Completed for one seed & Completed & Not implemented \\
+\bottomrule
+\end{tabular}
+\caption{Overview of the four experimental tracks (status 16 November 2026). Plain BP and Plain FF: aggregates over seeds 42--46. Secure BP: full-size batched-matrix \ac{mpc} run, seed 42, one run. Secure FF: not implemented. ``Not applicable'': the metric does not exist for the track; ``Not measured'': no measurement exists; ``Pending'': to be measured after implementation. The bounded 784--8--10 secure runs are reported separately in Table~\ref{tab:res-secure}.}
+\label{tab:res-overview}
+\end{table}
+
+\section{Plaintext Baselines}\label{sec:res-plain}
+Table~\ref{tab:res-plain} gives the plaintext benchmark (CPU, no \ac{mpc}). Utility was evaluated over five seeds, and timing over three repetitions per seed, which gives 15 timing observations per method; the three repetitions of a seed produced identical accuracies. The $\pm$ values are the sample standard deviation of the per-seed accuracy over the five seeds; recomputed from the per-run records, they are 2.89 and 3.18 percentage points (the population standard deviations would be 2.59 and 2.85). Table~\ref{tab:res-plain-seeds} gives the per-seed test accuracies and the selected checkpoints.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{8.4cm}cc@{}}
+\toprule
+Metric (plaintext) & Plain BP & Plain FF \\
+\midrule
+Test accuracy, mean $\pm$ s.d.\ over 5 seeds (\%) & $75.96\pm2.89$ & $59.76\pm3.18$ \\
+Test accuracy, min--max over 5 seeds (\%) & 71.7--78.4 & 55.5--62.9 \\
+Validation accuracy of selected checkpoint, mean $\pm$ s.d.\ (\%) & $76.64\pm1.76$ & $61.64\pm3.22$ \\
+Training time, mean over 15 observations (s) & 1.467 & 3.118 \\
+Training time, s.d.\ over 15 observations (s) & 0.056 & 0.040 \\
+Inference time, mean (s) & 0.053 & 0.077 \\
+Optimizer updates & 200 & 400 \\
+Example presentations & 25{,}000 & 100{,}000 \\
+Validation target 55\% / 60\% / 65\% reached (runs) & 15/15, 15/15, 15/15 & 15/15, 9/15, 3/15 \\
+\bottomrule
+\end{tabular}
+\caption{Plaintext benchmark PT-BENCH-v1 (MNIST, 5{,}000/1{,}000/1{,}000 split). \ac{ff} performs twice as many optimizer updates and four times as many presentations as \ac{bp}; the work is not equal.}
+\label{tab:res-plain}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}ccccc@{}}
+\toprule
+Seed & BP test (\%) & BP epoch & FF test (\%) & FF checkpoint \\
+\midrule
+42 & 77.2 & 5 & 62.7 & layer 2, epoch 1 \\
+43 & 74.3 & 5 & 55.5 & layer 2, epoch 1 \\
+44 & 71.7 & 3 & 59.9 & layer 2, epoch 1 \\
+45 & 78.2 & 5 & 57.8 & layer 2, epoch 1 \\
+46 & 78.4 & 5 & 62.9 & layer 2, epoch 1 \\
+\bottomrule
+\end{tabular}
+\caption{Per-seed plaintext test accuracies and validation-selected checkpoints (\texttt{results/benchmarks/plaintext/runs.csv}).}
+\label{tab:res-plain-seeds}
+\end{table}
+
+\section{Historical Bounded Secure BP Runs}\label{sec:res-secure}
+Table~\ref{tab:res-secure} lists the three bounded secure \ac{bp} runs on the 784--8--10 network and the 90/30/30 subset. They are development and validation milestones and are not comparable with the full-size run in Section~\ref{sec:res-full}. Communication is global communication; each run's output states that its benchmarks include preprocessing. The round figure is the compiler's virtual-machine count. A0 and A1 are historical runs with class-major ordering; their runtime and communication capture coverage, and possibly their execution conditions, differ, so no speed-up or communication improvement is computed between them. BP-COMP-001 is the comparison-readiness run; its measurement conditions relative to A0 and A1 have not been shown to be directly comparable, so differences between the rows are reported but not interpreted causally.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.4cm}>{\centering\arraybackslash}p{2.9cm}>{\centering\arraybackslash}p{2.9cm}>{\centering\arraybackslash}p{3.0cm}@{}}
+\toprule
+ & A0 (historical) & A1 (historical) & BP-COMP-001 \\
+\midrule
+Ordering & class-major & class-major & per-party shuffled \\
+Initialisation & $(i-j)/1000$ & $(i-j)/1000$ & He / Xavier (C3) \\
+ReLU derivative & original & strict $0<z$ & strict $0<z$ \\
+Validation correct & 3/30 & 3/30 & 13/30 \\
+Test correct & 3/30 & 3/30 & 14/30 \\
+Validation / test loss & 2.61444 / 2.48322 & 2.61574 / 2.483 & 1.82413 / 1.57591 \\
+MP-SPDZ time (s) & 40.81 & 6.99069 & 8.36998 \\
+Global data sent (MB) & 10{,}045.7 & 353.975 & 353.975 \\
+Compiler VM rounds & 37{,}778 & 40{,}508 & 40{,}508 \\
+Compiler instructions & $\approx$900{,}000 & $\approx$900{,}000 & 900{,}000 \\
+Capture coverage & three party blocks & one party block + global & one party block + global \\
+Trunc.\ / split options & apparently not enabled (see Section~\ref{sec:disc-bounded}) & enabled & enabled \\
+\bottomrule
+\end{tabular}
+\caption{Bounded secure \ac{bp} runs (single runs; 784--8--10; 30 validation and 30 test examples each).}
+\label{tab:res-secure}
+\end{table}
+
+For BP-COMP-001 the run log shows training losses of $2.24889$, $1.95888$ and $1.68115$ over the three epochs. The matched plaintext FP64 reference (configuration C3) gives $2.24893$, $1.95895$ and $1.68122$, a validation loss of $1.82423$ against $1.82413$, a test loss of $1.57606$ against $1.57591$, and the same correct counts of 13/30 and 14/30. The largest difference among these reported losses is about $1.5\times10^{-4}$. This is close aggregate agreement; the secure run releases only aggregates, so equal counts do not establish identical predictions or parameters, and the agreement is not claimed to be bit-exact. The aggregate verifier passed, and the strict ReLU boundary program on public inputs $[-1,0,1]$ returned ReLU values $[0,0,1]$ and derivative values $[0,0,1]$. The A0 run was historically audited against its own matched reference; the A1 run is not established as independently matched to FP64.
+
+\section{Full-Size Secure BP Run}\label{sec:res-full}
+The batched-matrix secure \ac{bp} program completed one full-size run (seed 42) on 15 November 2026, with process exit status 0. All values in this section are taken from the run log; they describe one run.
+
+\subsection{Training and Evaluation}\label{sec:res-full-utility}
+Table~\ref{tab:res-full-train} gives the mean training loss of every epoch and the validation and test results of the final model. The training loss decreases monotonically from 2.27463 to 0.908951 over the five epochs.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+Quantity (Secure BP, seed 42, single run) & Value \\
+\midrule
+Training loss, epoch 1 & 2.27463 \\
+Training loss, epoch 2 & 2.16141 \\
+Training loss, epoch 3 & 1.84132 \\
+Training loss, epoch 4 & 1.30545 \\
+Training loss, epoch 5 & 0.908951 \\
+Validation loss (epoch-5 model) & 0.787674 \\
+Validation correct & 767/1{,}000 (76.7\%) \\
+Test loss (epoch-5 model) & 0.77771 \\
+Test correct & 772/1{,}000 (77.2\%) \\
+\bottomrule
+\end{tabular}
+\caption{Utility of the full-size secure \ac{bp} run (784--128--128--10, MNIST 5{,}000/1{,}000/1{,}000, seed 42), as printed by MP-SPDZ.}
+\label{tab:res-full-train}
+\end{table}
+
+\subsection{Paired Seed-42 Comparison with Plain BP}\label{sec:res-paired}
+Table~\ref{tab:res-paired} compares the secure run with the Plain BP run for the same seed recorded in the repository (\texttt{results/baselines/bp.csv}; the same values appear in the benchmark records). The two runs share the split, the training order, the initial parameters, the architecture, the loss, the learning rate, the batch schedule, the number of epochs and the evaluated checkpoint (epoch 5 is also the validation-selected checkpoint of Plain BP for this seed). This is a descriptive single-seed comparison. The Plain BP values are stored with full float precision; the secure values are printed by MP-SPDZ with about six significant digits, so the differences are subject to a display rounding of at most $5\times10^{-6}$. The plaintext run was not repeated for this comparison; its three recorded timing repetitions give identical losses.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Metric (seed 42) & Plain BP (recorded) & Secure BP & Secure $-$ Plain \\
+\midrule
+Training loss, epoch 1 & 2.274702 & 2.27463 & $-7.20\times10^{-5}$ \\
+Training loss, epoch 2 & 2.161566 & 2.16141 & $-1.56\times10^{-4}$ \\
+Training loss, epoch 3 & 1.841642 & 1.84132 & $-3.22\times10^{-4}$ \\
+Training loss, epoch 4 & 1.305757 & 1.30545 & $-3.07\times10^{-4}$ \\
+Training loss, epoch 5 & 0.909157 & 0.908951 & $-2.06\times10^{-4}$ \\
+Validation loss & 0.788116 & 0.787674 & $-4.42\times10^{-4}$ \\
+Validation correct & 766/1{,}000 (76.6\%) & 767/1{,}000 (76.7\%) & $+1$ example ($+0.1$ pp) \\
+Test loss & 0.778144 & 0.77771 & $-4.34\times10^{-4}$ \\
+Test correct & 772/1{,}000 (77.2\%) & 772/1{,}000 (77.2\%) & 0 \\
+\bottomrule
+\end{tabular}
+\caption{Descriptive single-seed comparison of the recorded Plain BP run and the full-size secure \ac{bp} run (seed 42). Plain BP values are rounded to six decimals for display; the exact stored values are in \texttt{results/\allowbreak baselines/\allowbreak bp.csv} of the research repository.}
+\label{tab:res-paired}
+\end{table}
+
+The largest absolute loss difference is $4.42\times10^{-4}$ (validation loss), a relative difference of about 0.06\%. All seven secure loss values are slightly lower than the plaintext values. The counts differ by one validation example and not at all on the test set. Equal or nearly equal aggregate counts do not imply identical per-example predictions or identical parameters, which the secure run does not reveal.
+
+\subsection{Runtime, Communication and Memory}\label{sec:res-cost}
+Table~\ref{tab:res-cost} lists the cost measurements of the full-size run with the scope of each counter. The figures are not normalised to other environments and must not be combined across rows.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.2cm}>{\raggedleft\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{7.0cm}@{}}
+\toprule
+Measurement & Value & Source and scope \\
+\midrule
+MP-SPDZ time & 933.263\,s & Printed by party 0; the output states that it includes preprocessing (offline phase); starts after program loading, excludes compilation \\
+External elapsed time & 948.40\,s (15:48.40) & \texttt{/usr/bin/time -v} around \texttt{compile-run.py}, which compiled the program and ran the three parties; the composition of the 15.1\,s difference was not instrumented \\
+User / system CPU time & 730.01\,s / 1{,}933.05\,s & \texttt{/usr/bin/time -v}, timed process tree; 280\% CPU \\
+Party-0 data sent & 1{,}497.67\,MB & Printed by party 0; one party only \\
+Global data sent & 5{,}224.49\,MB & Sum over all three parties; same preprocessing scope as the MP-SPDZ time \\
+Party-0 communication rounds & $\approx$8{,}928{,}348 & Printed by party 0; approximate run-time count \\
+Compiler VM rounds & 5{,}638{,}872 & Compile-time statistic printed before execution; not a run-time count \\
+Probabilistic truncations (compiler) & 91{,}680{,}035 & Compile-time upper bound \\
+Maximum resident set size & 768{,}248\,KB & \texttt{/usr/bin/time -v}; largest process of the timed tree, not the sum over parties \\
+Exit status & 0 & Process completed; does not resolve the truncation-domain message \\
+\bottomrule
+\end{tabular}
+\caption{Cost measurements of the full-size secure \ac{bp} run (seed 42, single run, three parties on one host).}
+\label{tab:res-cost}
+\end{table}
+
+The run output also contains the virtual-machine message ``The computation domain is too small for low-round truncation; it would need to have at least 103 bits.'' It is discussed in Section~\ref{sec:disc-trunc}. For orientation only, the MP-SPDZ time corresponds to about 4.7\,s and the global communication to about 26\,MB per optimizer update when averaged over the 200 updates; this average includes evaluation and is not a measured per-update cost.
+
+\subsection{Integrity Evidence}\label{sec:res-integrity}
+Table~\ref{tab:res-integrity} summarises the integrity checks of the full-size run. The hashes themselves are listed in Appendix~\ref{app:manifest}.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{9.2cm}@{}}
+\toprule
+Check & Result \\
+\midrule
+Program SHA-256 & Matches the expected digest (recomputed for this thesis version) \\
+Input files P0, P1, P2 SHA-256 & All three match the expected digests and the bundle metadata (recomputed) \\
+Input-stream verification & \texttt{verification\_summary.json}: \texttt{all\_pass: true} (token counts, epoch orders, ownership, validation and test order, parameter layout, input hashes) \\
+MP-SPDZ commit & \texttt{113c4e47dd94bca9ecab029d2f0abe649bea5c52} (v0.4.4), confirmed in the local MP-SPDZ checkout \\
+Run log & 5{,}911 bytes; five training-loss lines, validation and test lines, cost lines, exit status 0 \\
+Smoke run before the full run & Matched its FP64 reference within tolerance (Section~\ref{sec:impl-verify}) \\
+Player-Data backup before the run & 33 files, 40{,}492{,}581 bytes (contents not read) \\
+\bottomrule
+\end{tabular}
+\caption{Integrity evidence for the full-size secure \ac{bp} run.}
+\label{tab:res-integrity}
+\end{table}
+
+\section{Secure Forward-Forward}\label{sec:res-sff}
+Secure \ac{ff} has not been implemented. No secure \ac{ff} accuracy, runtime, communication or memory value exists, and none is reported. Table~\ref{tab:res-overview} marks the corresponding entries as pending.
+
+\section{What These Results Do Not Show}\label{sec:res-notshow}
+Because secure \ac{ff} has not been implemented, no per-operation profile of either method exists, and no \ac{mpc}-aware modification has been evaluated, the results do not answer research questions 1--3. They show that plaintext \ac{bp} outperforms plaintext \ac{ff} in test accuracy in this benchmark configuration, that a bounded secure \ac{bp} run executes end to end and agrees closely with an FP64 reference, and that a full-size secure \ac{bp} run on the plaintext configuration completes on one host and agrees closely with the matching plaintext run for one seed.

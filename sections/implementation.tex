@@ -1,0 +1,111 @@
+\chapter{System Design and Implementation}\label{chap:impl}
+\sloppy
+
+This chapter describes the implementations behind the four experimental tracks as they exist on 16 November 2026: the plaintext baselines, the historical bounded secure \ac{bp} programs, and the batched-matrix secure \ac{bp} program used for the full-size run. Secure \ac{ff} has not been implemented. All code, configurations and recorded results are kept in the project repository; paths below are relative to its root.
+
+\section{Software Environment}\label{sec:impl-env}
+The secure computation uses MP-SPDZ v0.4.4 at the commit given in Section~\ref{sec:method-protocol}, built locally with the replicated-ring party binary (\texttt{replicated-ring-party.x}). The plaintext baselines are implemented in Python with PyTorch on CPU (Python 3.14.4, PyTorch 2.14.1+cpu, four threads, as recorded in the benchmark metadata). Data preparation, input generation and verification scripts are written in Python. The execution environment of the secure runs is described in Section~\ref{sec:setup-env}.
+
+\section{Plaintext Baselines}\label{sec:impl-plain}
+\paragraph{Plain BP} (\texttt{src/\allowbreak baselines/\allowbreak bp.py}) is a PyTorch \texttt{Sequential} model 784--128--128--10 with ReLU hidden layers and a linear output layer (118{,}282 parameters), initialised with the PyTorch default after \texttt{torch.manual\_seed(seed)}. It is trained with cross-entropy loss and \ac{sgd} at learning rate $0.05$ (no momentum) with batch size 128 for five epochs; the training loader shuffles with a generator seeded by the run seed. After every epoch the validation accuracy is computed and the best checkpoint is kept.
+
+\paragraph{Plain FF} (\texttt{src/\allowbreak baselines/\allowbreak ff.py}) uses two fully connected layers 784--128--128 (116{,}992 parameters) with PyTorch default initialisation. The label is embedded by overwriting the first ten input pixels with a one-hot code. Each layer computes $\mathbf{h}=\mathrm{ReLU}(W\mathbf{x}+\mathbf{b})$, its goodness is $g=\sum_j h_j^2$ (computed before normalisation), and its output is L2-normalised before it is passed on. The local loss is $\mathrm{softplus}(\theta-g_{+})+\mathrm{softplus}(g_{-}-\theta)$, averaged over the batch, with threshold $\theta=2.0$ (Equations~\eqref{eq:ff-loss-pos}--\eqref{eq:ff-loss-neg}). Negative examples use a uniformly random wrong label drawn from a separately seeded generator. Layers are trained greedily, five epochs each, with one \ac{sgd} optimizer per layer at learning rate $0.01$ and batch size 128. Inference evaluates all ten candidate labels and selects the label with the highest goodness summed over both layers. During training of layer~2, the validation accuracy after every epoch selects the reported checkpoint.
+
+\paragraph{Benchmark harness.} \texttt{scripts/\allowbreak benchmark.py} runs both methods on the same split for seeds 42--46 with three timing repetitions per seed and writes \texttt{results/\allowbreak benchmarks/\allowbreak plaintext/} (\texttt{runs.csv}, \texttt{summary.csv}, \texttt{metadata.json}). The metadata records SHA-256 hashes of the two baseline sources and the harness.
+
+\section{Historical Bounded Secure BP Programs}\label{sec:impl-secure}
+The first secure program is written in the MP-SPDZ high-level language with scalar loops. A data-preparation script (\texttt{prepare\_\allowbreak mpc\_\allowbreak data.py}) selects the bounded MNIST subset, assigns ownership and writes the per-party input files together with metadata and file hashes. The training program (\texttt{bp\_\allowbreak train.mpc}) performs the forward pass, softmax cross-entropy, the backward pass with the strict ReLU derivative ($0<z$) and \ac{sgd} updates for the 784--8--10 network; a run script invokes compilation and execution for the replicated-ring protocol and logs the output. The comparison-readiness pass added a run configuration (\texttt{bp\_\allowbreak comparison.yaml}), a plaintext FP64 reference implementation (\texttt{bp\_\allowbreak training\_\allowbreak reference.py}) with tests, a strict ReLU edge-case program (\texttt{relu\_\allowbreak strict\_\allowbreak edge.mpc}) with its verifier and a report. The raw artifacts of BP-COMP-001 (input files, initial parameters, metadata, FP64 reference, runtime log) are stored under \texttt{results/\allowbreak mpc/\allowbreak bp/\allowbreak comparison\_\allowbreak baseline/\allowbreak BP-COMP-001/}. Historical artifacts of the earlier runs were left unchanged; a mismatch between the runtime-log checksum embedded in the metadata of A0 and the actual checksum of its log is documented, and the raw files are preserved unaltered.
+
+\section{From Scalar Loops to Matrix Products}\label{sec:impl-scalar}
+To scale secure \ac{bp} to the plaintext configuration, the scalar implementation was first generalised: a shared template (\texttt{bp\_\allowbreak secure\_\allowbreak template.mpc.in}) renders both the bounded profile and a full-size scalar profile (\texttt{bp\_\allowbreak matched.mpc}) for 784--128--128--10 with the 39$\times$128 + 8 batch schedule. This program is a correct reference implementation, but it is not executable in practice. Compile-only statistics from the pinned compiler (Table~\ref{tab:impl-scalar-matrix}) show about $2.0\times10^{10}$ virtual-machine rounds and $6.6\times10^{9}$ probabilistic truncations, because every scalar product is truncated and scheduled separately. A nine-sample diagnostic of the scalar program did not finish within a 600-second limit.
+
+The batched-matrix program (\texttt{mpc/\allowbreak programs/\allowbreak bp/\allowbreak bp\_\allowbreak matched\_\allowbreak matrix.mpc}) implements the same experiment with MP-SPDZ's native matrix products. For the same network, data and schedule, its compiler output lists 5{,}638{,}872 virtual-machine rounds and 91{,}680{,}035 probabilistic truncations, about $3{,}500\times$ fewer rounds and $72\times$ fewer truncations. These are compile-time upper-bound statistics, not measured costs; they explain why the matrix program was used for the full run.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{6.0cm}rr@{}}
+\toprule
+Compiler statistic (\texttt{-E ring -l -M}) & Scalar (\texttt{bp\_matched}) & Matrix (\texttt{bp\_matched\_matrix}) \\
+\midrule
+Virtual-machine rounds & 19{,}965{,}875{,}172 & 5{,}638{,}872 \\
+Integer probabilistic truncations & 6{,}638{,}164{,}835 & 91{,}680{,}035 \\
+Bit triples & 1{,}761{,}310{,}000 & 933{,}945{,}000 \\
+Integer simple multiplications & 6{,}631{,}571{,}400 & 23{,}454{,}000 \\
+Integer dot products & 0 & 37{,}185{,}200 \\
+Matrix multiplications (all shapes) & 0 & 1{,}660 \\
+\bottomrule
+\end{tabular}
+\caption{Compile-only statistics of the scalar and batched-matrix full-size secure \ac{bp} programs (pinned MP-SPDZ compiler; records in \texttt{results/mpc/bp/matrix\_matched\_v1\_preflight/}). Statistics are the compiler's ``requires at most'' counts, not run-time measurements.}
+\label{tab:impl-scalar-matrix}
+\end{table}
+
+\section{Batched-Matrix Secure BP Program}\label{sec:impl-matrix}
+\paragraph{Parameters and layout.} The weights are declared as secret fixed-point matrices $W^{(1)}\in\mathbb{R}^{784\times128}$, $W^{(2)}\in\mathbb{R}^{128\times128}$ and $W^{(3)}\in\mathbb{R}^{128\times10}$ in input-by-output, row-major layout, with bias vectors $\mathbf{b}^{(l)}$. PyTorch stores the weight of a linear layer as output-by-input, so the input generator transposes each weight matrix; biases are unchanged. With batch rows as matrix rows, a layer is $Z=XW+\mathbf{1}\mathbf{b}^\top$, which is the row-wise form of Equation~\eqref{eq:mlp-pre}.
+
+\paragraph{Batch processing.} Three sets of buffers have compile-time row counts: 128 for full training batches, 8 for the final batch and 100 for evaluation chunks. Loading a batch reads, in a sequential loop, the 784 pixel values and the 10-element one-hot label of each example from the input stream of its owner, so that the per-party streams are consumed in exactly the order in which they were written. Each epoch runs 39 full batches in a run-time loop followed by the final batch of eight with its own buffers.
+
+\paragraph{Forward pass and loss.} Each layer computes a native matrix product (\texttt{direct\_mul}) followed by a row-wise bias addition. The ReLU layer computes the mask $M=[Z>0]$ by secure comparison, stores it, and sets $H=Z\odot M$; the stored mask is reused as the derivative in the backward pass, so $\sigma'(0)=0$ as in the strict convention of Section~\ref{sec:bg-bp}. The loss is computed per row in numerically stable form, $\mathcal{L}=\log\sum_k e^{z_k-s}+s-z_y$ with a shift $s$ supplied by MP-SPDZ's softmax helper, using the library's secure exponentiation, logarithm and division; the softmax probabilities $P$ are stored for the backward pass.
+
+\paragraph{Backward pass and update.} The output error is $D^{(3)}=P-Y$. Hidden errors use products with the transposed weights (\texttt{direct\_mul\_trans}), $D^{(2)}=(D^{(3)}W^{(3)\top})\odot M^{(2)}$ and $D^{(1)}=(D^{(2)}W^{(2)\top})\odot M^{(1)}$. Weight gradients are products of transposed activations with errors, $\nabla W^{(l)}=A^{(l-1)\top}D^{(l)}$ (\texttt{direct\_trans\_mul}), accumulated without intermediate truncation and reduced once per output element; bias gradients are column sums of $D^{(l)}$. Each parameter is then updated as $\theta\leftarrow\theta-(\eta\nabla\theta)\cdot(1/B)$ with $\eta=0.05$ and $B$ the actual batch size (128 or 8). The factor $1/B$ is a public constant that is exactly representable for both batch sizes; a project analysis found that the single constant $0.05/128$ would be rounded to 26 quanta of $2^{-16}$ instead of 25.6, a learning-rate bias of about 1.6\%, which this form avoids. Parameters persist across batches and epochs. Algorithm~\ref{alg:impl-batch} summarises one training batch.
+
+\begin{algorithm}[ht]
+\caption{One training batch of the batched-matrix secure \ac{bp} program (all values secret-shared).}
+\label{alg:impl-batch}
+\begin{algorithmic}[1]
+\STATE Load $B$ examples into $X\in\mathbb{R}^{B\times784}$, $Y\in\{0,1\}^{B\times10}$; example $r$ is input by party $(\mathit{start}+r) \bmod 3$
+\STATE $Z^{(1)} \leftarrow XW^{(1)}+\mathbf{1}\mathbf{b}^{(1)\top}$; \quad $M^{(1)}\leftarrow[Z^{(1)}>0]$; \quad $H^{(1)}\leftarrow Z^{(1)}\odot M^{(1)}$
+\STATE $Z^{(2)} \leftarrow H^{(1)}W^{(2)}+\mathbf{1}\mathbf{b}^{(2)\top}$; \quad $M^{(2)}\leftarrow[Z^{(2)}>0]$; \quad $H^{(2)}\leftarrow Z^{(2)}\odot M^{(2)}$
+\STATE $Z^{(3)} \leftarrow H^{(2)}W^{(3)}+\mathbf{1}\mathbf{b}^{(3)\top}$
+\STATE For each row: stable softmax $P$ and cross-entropy; add the row loss to the epoch total
+\STATE $D^{(3)}\leftarrow P-Y$; \quad $D^{(2)}\leftarrow (D^{(3)}W^{(3)\top})\odot M^{(2)}$; \quad $D^{(1)}\leftarrow (D^{(2)}W^{(2)\top})\odot M^{(1)}$
+\STATE $\nabla W^{(3)}\leftarrow H^{(2)\top}D^{(3)}$; \quad $\nabla W^{(2)}\leftarrow H^{(1)\top}D^{(2)}$; \quad $\nabla W^{(1)}\leftarrow X^{\top}D^{(1)}$ (one truncation per element)
+\STATE $\nabla\mathbf{b}^{(l)}\leftarrow$ column sums of $D^{(l)}$
+\STATE $\theta \leftarrow \theta - (0.05\,\nabla\theta)\cdot(1/B)$ for every weight matrix and bias vector
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Evaluation and disclosure.} After five epochs, the final model is evaluated on the 1{,}000 validation and 1{,}000 test examples in chunks of 100 rows. The prediction is the argmax of the logits, as in the plaintext baseline, and is compared with the argmax of the one-hot label inside \ac{mpc}. Only the mean training loss of each epoch and the mean loss and number of correct predictions on the validation and test sets are revealed.
+
+\paragraph{Differences from the scalar program.} The matrix program differs from the scalar program only in numerical detail: dot products are truncated once per output element instead of once per product, the update uses the exact $1/B$ factor, the ReLU mask is computed once and reused, and evaluation uses the argmax of the logits. None of these changes the learning rule; both programs implement mini-batch \ac{bp} with \ac{sgd}, and each is compared with an FP64 reference rather than with the other.
+
+\section{Input Generation, Ownership and Provenance}\label{sec:impl-provenance}
+The three per-party input files for the full-size run are produced by \texttt{scripts/\allowbreak prepare\_\allowbreak secure\_\allowbreak bp\_\allowbreak matched.py}, which reuses the baseline split function and data loader to write each party's stream in consumption order: party~0 first writes all 118{,}282 initial parameters, and then every party writes, for each epoch and each training position it owns, 784 pixel values and 10 label values, followed by its validation and test examples (Figure~\ref{fig:impl-parties}). The resulting bundle (\texttt{SECURE-BP-MATCHED-v1\_seed42\_corrected}) contains 7{,}266{,}664, 7{,}146{,}794 and 7{,}142{,}824 input values for parties 0, 1 and 2, together with \texttt{metadata.json}, \texttt{parameters.json} and \texttt{verification\_summary.json}. The bundle name records that two errors of an earlier generator were corrected before any full run: the training order initially did not reproduce the plaintext data loader's internal use of its random generator, and the weight matrices were initially not transposed.
+
+The independent verifier \texttt{scripts/\allowbreak verify/\allowbreak verify\_\allowbreak secure\_\allowbreak bp\_\allowbreak inputs.py} parses every stream and reports \texttt{all\_pass: true} for all its checks: all tokens consumed with the expected per-party counts, the five epoch orders equal to the baseline order and ownership, validation and test order and ownership, transposed initial-parameter layout, and input hashes matching the metadata. The program and input hashes recorded for the run are listed in Appendix~\ref{app:manifest}. The bundle metadata records that it was generated from repository commit \texttt{974e202} with uncommitted changes in the working tree; the matrix program, the verifier and the evidence record were committed afterwards (commit \texttt{ef00de1}), and the committed program file has the SHA-256 recorded for the run.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+  party/.style={draw, rounded corners, align=center, minimum width=4.3cm, minimum height=1.5cm, font=\small},
+  core/.style={draw, very thick, rounded corners, align=center, minimum width=13.6cm, minimum height=1.4cm, font=\small},
+  outbox/.style={draw, dashed, rounded corners, align=center, minimum width=13.6cm, minimum height=1.0cm, font=\small},
+  link/.style={-{Stealth[length=2.5mm]}, thick}
+]
+\node[party] (p0) {\textbf{Party 0}\\initial parameters (public seed)\\examples at positions $\equiv0 \pmod 3$};
+\node[party, right=0.35cm of p0] (p1) {\textbf{Party 1}\\examples at\\positions $\equiv1 \pmod 3$};
+\node[party, right=0.35cm of p1] (p2) {\textbf{Party 2}\\examples at\\positions $\equiv2 \pmod 3$};
+\node[core, below=1.1cm of p1] (mpc) {MP-SPDZ Rep3 Ring (\texttt{replicated-ring-party.x}), 64-bit ring, \texttt{sfix(16,31)}\\three party processes on one host (localhost); all data and parameters secret-shared};
+\node[outbox, below=0.9cm of mpc] (res) {opened: mean training loss per epoch; validation and test loss and correct counts};
+\draw[link] (p0) -- (p0 |- mpc.north);
+\draw[link] (p1) -- (mpc);
+\draw[link] (p2) -- (p2 |- mpc.north);
+\draw[link] (mpc) -- (res);
+\end{tikzpicture}
+\caption{Inputs, protocol and disclosure of the full-size secure \ac{bp} run. Ownership by position modulo three simulates three data owners; all three processes ran on the same host.}
+\label{fig:impl-parties}
+\end{figure}
+
+\section{Verification Before the Full Run}\label{sec:impl-verify}
+The full-size program was introduced through a sequence of checks of increasing scope. These are implementation-verification evidence, not training results.
+\begin{enumerate}
+  \item \emph{Offline references.} A float64 Python simulator that consumes the party streams exactly as the program does reproduces PyTorch float64 \ac{sgd} on the baseline data loader (parameter differences of at most $1.1\times10^{-16}$ after every epoch) and the recorded float32 Plain BP losses to the displayed digits. A fixed-point emulation with 16 fractional bits and probabilistic rounding (but floating-point exp, log and division) predicted an epoch-5 training loss within about $10^{-4}$ of float64, 766--767 correct validation examples and 772 correct test examples. The repository's unit tests (68 at the time of the pre-run report) were reported as passing; they were not re-run for this thesis version.
+  \item \emph{Single-batch MPC audit.} A diagnostic variant of a batch-size-3 matrix prototype on the full architecture revealed all intermediate tensors of one training step. Against an FP64 reference, all 24 audited tensors matched in shape and orientation, the predictions matched, and the largest absolute error over 238{,}964 values was $2.2\times10^{-4}$.
+  \item \emph{One-epoch smoke run.} A smoke profile of the full program (one epoch over 264 training examples in batches of 128, 128 and 8; 100 validation and 100 test examples) ran under MPC on 15 November 2026. It printed a training loss of 2.30479, a validation loss of 2.29572 with 15/100 correct and a test loss of 2.28882 with 19/100 correct, against FP64 reference values of 2.30485, 2.29580 (15/100) and 2.28888 (19/100), all within the pre-registered tolerance of $8.6\times10^{-5}$ and with exactly the expected counts.
+\end{enumerate}
+
+\section{MP-SPDZ Integration and Run Hygiene}\label{sec:impl-integration}
+The secure programs are compiled and executed with MP-SPDZ's \texttt{compile-run.py} using the options \texttt{-l -M -E ring}, which select the ring-protocol optimisations and start the three replicated-ring parties on the local host. For the matrix runs, the input bundle is passed to the parties with the runtime option \texttt{-IF} (input-file prefix), so that the existing files in MP-SPDZ's \texttt{Player-Data} directory are not overwritten. Before the full run, \texttt{Player-Data} was copied to a separate backup directory (33 files, 40{,}492{,}581 bytes); this directory contains key material and preprocessing state and is not part of the thesis evidence package. The run output was written to a new, dedicated run directory.
+
+\section{Current Implementation Status}\label{sec:impl-status}
+Plaintext \ac{bp} and \ac{ff} baselines exist and have been benchmarked. Secure \ac{bp} exists as historical bounded scalar programs, a full-size scalar reference program that is not executable in practice, and a batched-matrix program that has completed one full-size run. A secure \ac{ff} implementation has not been started, per-operation profiling of either method has not been done, and no \ac{mpc}-aware \ac{ff} modification has been implemented. The core secure \ac{bp}-versus-\ac{ff} comparison has therefore not been carried out.

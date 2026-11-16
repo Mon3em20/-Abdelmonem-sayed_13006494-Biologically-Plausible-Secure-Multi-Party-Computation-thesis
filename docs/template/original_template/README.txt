@@ -1,0 +1,1 @@
+Original template sources as pasted by the student (kept verbatim in TEMPLATE_AUDIT.md excerpts). The binary giu_logo.png was not supplied as a file; figures/giu_logo.png is therefore a placeholder (see TEMPLATE_AUDIT.md). Replace with the real logo from your Overleaf copy.
