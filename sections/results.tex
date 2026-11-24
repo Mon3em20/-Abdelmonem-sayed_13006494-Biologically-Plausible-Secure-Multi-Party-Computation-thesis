@@ -1,35 +1,35 @@
 \chapter{Results}\label{chap:results}
 
-This chapter reports all results available on 16 November 2026. Results are grouped by experimental track. Five-seed plaintext aggregates and single secure runs are always labelled as such and are never treated as statistically equivalent. Unless stated otherwise, accuracies are percentages of correctly classified examples, losses are mean cross-entropy values, and $\pm$ denotes the sample standard deviation over seeds.
+This chapter reports all results available on 24 November 2026. Results are grouped by experimental track. Five-seed plaintext aggregates and single secure runs are always labelled as such and are never treated as statistically equivalent. Quantities that were measured or printed by a program are kept distinct from quantities derived from them, and derived values are labelled as such. Unless stated otherwise, accuracies are percentages of correctly classified examples, losses are mean cross-entropy values, and $\pm$ denotes the sample standard deviation over seeds.
 
 \section{Overview of the Four Experimental Tracks}\label{sec:res-overview}
-Table~\ref{tab:res-overview} summarises the evidence for the four tracks. It is an overview, not a controlled four-way comparison: the plaintext columns aggregate five seeds with validation-selected checkpoints, the Secure BP column is a single run evaluated at the final epoch, and the Secure FF column is empty because that track has not been implemented. The time and communication entries of the plaintext and secure columns have different measurement boundaries and must not be divided into speed-up or overhead factors.
+Table~\ref{tab:res-overview} summarises the evidence for the four tracks. It is an overview, not a controlled four-way comparison: the plaintext columns aggregate five seeds with validation-selected checkpoints, the Secure BP column is a single run evaluated at the final epoch, and the Secure FF column is a single run (seed 42) evaluated at a validation-selected checkpoint. The time and communication entries of the plaintext and secure columns have different measurement boundaries and must not be divided into speed-up or overhead factors.
 
 \begin{table}[htbp]
 \centering
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{2.95cm}>{\raggedright\arraybackslash}p{2.95cm}>{\raggedright\arraybackslash}p{2.95cm}>{\raggedright\arraybackslash}p{2.3cm}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.1cm}>{\raggedright\arraybackslash}p{2.75cm}>{\raggedright\arraybackslash}p{2.75cm}>{\raggedright\arraybackslash}p{2.75cm}>{\raggedright\arraybackslash}p{2.75cm}@{}}
 \toprule
 Metric & Plain BP & Secure BP & Plain FF & Secure FF \\
 \midrule
 Learning algorithm & \ac{bp} & \ac{bp} & \ac{ff} & \ac{ff} \\
-Execution & Plaintext; PyTorch, CPU, float32 & \ac{mpc}; MP-SPDZ, Rep3 Ring, 3 parties, \texttt{sfix(16,31)} & Plaintext; PyTorch, CPU, float32 & Planned: as Secure BP \\
-Architecture & 784--128--128--10 & 784--128--128--10 & 784--128--128 & Pending \\
-Parameters & 118{,}282 & 118{,}282 & 116{,}992 & Pending \\
-Train / val.\ / test & 5{,}000 / 1{,}000 / 1{,}000 & 5{,}000 / 1{,}000 / 1{,}000 (same indices) & 5{,}000 / 1{,}000 / 1{,}000 & Pending \\
-Seed coverage & 5 seeds (42--46) & Single run, seed 42 & 5 seeds (42--46) & Not implemented \\
-Training & \ac{sgd} 0.05; batch 128; 5 epochs; 200 updates & As Plain BP & Per-layer \ac{sgd} 0.01; batch 128; 5 epochs per layer; 400 updates & Pending \\
-Evaluated checkpoint & Best validation epoch & Epoch 5 & Best validation layer-2 epoch & Pending \\
-Test accuracy & $75.96\pm2.89$ (5-seed mean $\pm$ s.d.); seed 42: 77.2 & 77.2 (772/1{,}000), single run & $59.76\pm3.18$ (5-seed mean $\pm$ s.d.) & Pending \\
-Validation accuracy & $76.64\pm1.76$ (5-seed, selected checkpoint); seed 42: 76.6 & 76.7 (767/1{,}000), single run & $61.64\pm3.22$ (5-seed, selected checkpoint) & Pending \\
-Training time & 1.467\,s (training loop; mean of 15 observations) & 933.263\,s MP-SPDZ time; 948.40\,s external elapsed & 3.118\,s (training loop; mean of 15 observations) & Pending \\
-Communication & Not applicable & 5{,}224.49\,MB global; 1{,}497.67\,MB party~0 & Not applicable & Pending \\
-Memory & Not measured & 768{,}248\,KB maximum resident set size (timed process tree) & Not measured & Pending \\
-Status & Completed & Completed for one seed & Completed & Not implemented \\
+Execution & Plaintext; PyTorch, CPU, float32 & \ac{mpc}; MP-SPDZ, Rep3 Ring, 3 parties, \texttt{sfix(16,31)} & Plaintext; PyTorch, CPU, float32 & \ac{mpc}; as Secure BP \\
+Architecture & 784--128--128--10 & 784--128--128--10 & 784--128--128 & 784--128--128 \\
+Parameters & 118{,}282 & 118{,}282 & 116{,}992 & 116{,}992 \\
+Train / val.\ / test & 5{,}000 / 1{,}000 / 1{,}000 & 5{,}000 / 1{,}000 / 1{,}000 (same indices) & 5{,}000 / 1{,}000 / 1{,}000 & 5{,}000 / 1{,}000 / 1{,}000 (same indices) \\
+Seed coverage & 5 seeds (42--46) & Single run, seed 42 & 5 seeds (42--46) & Single run, seed 42 \\
+Training & \ac{sgd} 0.05; batch 128; 5 epochs; 200 updates & As Plain BP & Per-layer \ac{sgd} 0.01; batch 128; 5 epochs per layer; 400 updates & As Plain FF \\
+Evaluated checkpoint & Best validation epoch & Epoch 5 & Best validation layer-2 epoch & Layer-2 epoch 1 (validation-selected) \\
+Test accuracy (\%) & $75.96\pm2.89$ (5-seed mean $\pm$ s.d.); seed 42: 77.2 & 77.2 (772/1{,}000), single run & $59.76\pm3.18$ (5-seed mean $\pm$ s.d.); seed 42: 62.7 & 60.9 (609/1{,}000), single run \\
+Validation accuracy (\%) & $76.64\pm1.76$ (5-seed, selected checkpoint); seed 42: 76.6 & 76.7 (767/1{,}000), single run & $61.64\pm3.22$ (5-seed, selected checkpoint); seed 42: 62.0 & 60.8 (608/1{,}000), selected checkpoint \\
+Training time & 1.467\,s (training loop; mean of 15 observations) & 933.263\,s MP-SPDZ time; 948.40\,s external elapsed (incl.\ compilation) & 3.118\,s (training loop; mean of 15 observations) & 253.451\,s MP-SPDZ time; 254.07\,s external (execution only); compilation 18.76\,s \\
+Communication & Not applicable & 5{,}224.49\,MB global; 1{,}497.67\,MB party~0 & Not applicable & 14{,}748.1\,MB global; 4{,}501\,MB party~0 \\
+Memory & Not measured & 768{,}248\,KB maximum over the timed process tree & Not measured & 240.3\,MB maximum over three party processes \\
+Status & Completed & Completed for one seed & Completed & Completed and verified for one seed \\
 \bottomrule
 \end{tabular}
-\caption{Overview of the four experimental tracks (status 16 November 2026). Plain BP and Plain FF: aggregates over seeds 42--46. Secure BP: full-size batched-matrix \ac{mpc} run, seed 42, one run. Secure FF: not implemented. ``Not applicable'': the metric does not exist for the track; ``Not measured'': no measurement exists; ``Pending'': to be measured after implementation. The bounded 784--8--10 secure runs are reported separately in Table~\ref{tab:res-secure}.}
+\caption{Overview of the four experimental tracks (status 24 November 2026). Plain BP and Plain FF: aggregates over seeds 42--46, with the seed-42 value added for reference. Secure BP and Secure FF: full-size \ac{mpc} runs, seed 42, one run each. The secure columns differ in compiler flags, timing and memory scopes, workload and checkpoint policy (Section~\ref{sec:method-sff}) and are not a controlled comparison. ``Not applicable'': the metric does not exist for the track; ``Not measured'': no measurement exists. The bounded 784--8--10 secure runs are reported separately in Table~\ref{tab:res-secure}.}
 \label{tab:res-overview}
 \end{table}
 
@@ -216,9 +216,199 @@ Player-Data backup before the run & 33 files, 40{,}492{,}581 bytes (contents not
 \label{tab:res-integrity}
 \end{table}
 
-\section{Secure Forward-Forward}\label{sec:res-sff}
-Secure \ac{ff} has not been implemented. No secure \ac{ff} accuracy, runtime, communication or memory value exists, and none is reported. Table~\ref{tab:res-overview} marks the corresponding entries as pending.
+\FloatBarrier
+\section{Full-Size Secure Forward-Forward Run}\label{sec:res-sff}
+The Secure \ac{ff} program (Section~\ref{sec:impl-sff}) completed one full-size run (seed 42, 5{,}000/1{,}000/1{,}000 examples) on 22 November 2026, with compilation and run exit status 0 and the completion marker present. All values in this section are taken from the run output and the measurement record derived from it (Appendix~\ref{app:manifest}); they describe one run.
+
+\FloatBarrier
+\subsection{Validation and Test Accuracy}\label{sec:res-sff-utility}
+Table~\ref{tab:res-sff-val} gives the validation result after each layer-2 epoch and the test result of the selected checkpoint. The validation accuracy was highest after the first layer-2 epoch (608 of 1{,}000), so epoch~1 was selected by the secret checkpoint rule, and the single test evaluation of the restored checkpoint gave 609 of 1{,}000 correct predictions (60.9\%). The validation accuracy of the later epochs was lower (58.0--59.0\%, last epoch 58.1\%), and the sampler failure count was 0. The last-epoch value is informational and is not the reported checkpoint.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Layer-2 epoch & Validation correct & Validation accuracy (\%) & Selected \\
+\midrule
+1 & 608 / 1{,}000 & 60.8 & yes \\
+2 & 590 / 1{,}000 & 59.0 & \\
+3 & 580 / 1{,}000 & 58.0 & \\
+4 & 580 / 1{,}000 & 58.0 & \\
+5 & 581 / 1{,}000 & 58.1 & \\
+\midrule
+Test (selected checkpoint) & 609 / 1{,}000 & 60.9 & \\
+\bottomrule
+\end{tabular}
+\caption{Secure \ac{ff} validation and test results (seed 42, single run), as opened by the program. The test set was evaluated once, with the restored epoch-1 checkpoint.}
+\label{tab:res-sff-val}
+\end{table}
+
+\FloatBarrier
+\subsection{Local Loss}\label{sec:res-sff-loss}
+The program opens one \emph{weighted loss} per layer-epoch, $\sum_b \ell_b B_b/8$, where $\ell_b$ is the batch-mean local loss and $B_b\in\{128,8\}$ the batch size (Section~\ref{sec:impl-sff}). Because the weights sum to $5{,}000/8=625$, the mean per-sample local loss of an epoch is the weighted loss multiplied by $8/5{,}000$. Table~\ref{tab:res-sff-loss} lists both quantities; the second is derived, not printed by the program. The local loss of each layer decreases over its five epochs (layer~1 from 1.455 to 1.330; layer~2 from 1.947 to 1.393 per sample), and the largest part of the layer-2 decrease occurs in the first three epochs. The losses of the two layers are losses of different local objectives on different inputs and are not comparable with each other or with the cross-entropy losses of Secure BP.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{@{}ccrr@{}}
+\toprule
+Layer & Epoch & Weighted loss (opened) & Per-sample local loss (derived) \\
+\midrule
+1 & 1 & 909.3444 & 1.45495 \\
+1 & 2 & 877.7035 & 1.40433 \\
+1 & 3 & 860.0188 & 1.37603 \\
+1 & 4 & 844.7316 & 1.35157 \\
+1 & 5 & 831.4025 & 1.33024 \\
+\midrule
+2 & 1 & 1{,}216.6520 & 1.94664 \\
+2 & 2 & 981.2040 & 1.56993 \\
+2 & 3 & 877.8796 & 1.40461 \\
+2 & 4 & 871.2056 & 1.39393 \\
+2 & 5 & 870.7638 & 1.39322 \\
+\bottomrule
+\end{tabular}
+\caption{Secure \ac{ff} local loss per layer-epoch (seed 42). Weighted loss: $\sum_b\ell_bB_b/8$ as printed by the program; per-sample local loss: weighted loss $\times\,8/5{,}000$, the mean over training samples of the sum of the positive and the negative softplus term, computed from the printed values.}
+\label{tab:res-sff-loss}
+\end{table}
+
+\FloatBarrier
+\subsection{Runtime, Communication and Memory}\label{sec:res-sff-cost}
+Table~\ref{tab:res-sff-cost} lists the cost measurements of the full run together with the scope of each counter. The MP-SPDZ time is printed by party~0, includes preprocessing and excludes compilation; the external wall time is measured around the run script only; compilation was timed separately. The three quantities are different measurements and are not added or subtracted.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.2cm}>{\raggedleft\arraybackslash}p{2.9cm}>{\raggedright\arraybackslash}p{6.7cm}@{}}
+\toprule
+Measurement & Value & Source and scope \\
+\midrule
+MP-SPDZ time & 253.451\,s & Printed by party 0; includes preprocessing (on-demand); excludes compilation \\
+External run wall time & 254.07\,s & \texttt{/usr/bin/time} around \texttt{ring.sh}; execution only \\
+Compilation wall time & 18.76\,s & Separate compile command \\
+Compilation peak memory & 744{,}704\,KB & Compile step only \\
+Party-0 data sent & 4{,}501\,MB & Printed by party 0; one party only \\
+Global data sent & 14{,}748.1\,MB & Sum over the three parties as printed; not three times the party-0 value \\
+Party-0 runtime rounds & 1{,}799{,}138 & Printed by party 0; approximate run-time count \\
+Peak RSS, party 0 / 1 / 2 & 239.8 / 240.0 / 240.3\,MB & One value per party process; compilation excluded \\
+Maximum party peak RSS & 240.3\,MB & Maximum of the three party values; not a sum \\
+Exit status & 0 (compile and run) & Process completed; the truncation-domain message of Section~\ref{sec:disc-trunc} was also printed \\
+\bottomrule
+\end{tabular}
+\caption{Cost measurements of the full-size Secure \ac{ff} run (seed 42, single run, three parties on one host).}
+\label{tab:res-sff-cost}
+\end{table}
+
+\FloatBarrier
+\subsection{Phase-Level Measurements}\label{sec:res-sff-phase}
+Table~\ref{tab:res-sff-phase} gives the party-0 measurements of the four phases of the run. Each value is the sum of the differences of party~0's cumulative timer counters over the calls of the phase (five calls for the training and validation phases, one for the test). The phases exclude input reading and model loading, whereas the MP-SPDZ time covers everything the party executed, so the phase times do not add up to the MP-SPDZ time and must not be subtracted from it. Time, volume and rounds are party-0 counters. These are phase-level measurements, not per-operation microbenchmarks: they do not identify which secure operations (comparisons, truncations, exponentiation, logarithm, square root, division) account for the cost of a phase.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{@{}lcrrr@{}}
+\toprule
+Phase (party 0) & Calls & Time (s) & Communication (MB) & Runtime rounds \\
+\midrule
+Layer-1 training (5 epochs) & 5 & 71.392 & 1{,}241.10 & 405{,}140 \\
+Layer-2 training (5 epochs) & 5 & 100.117 & 1{,}699.00 & 788{,}738 \\
+Validation inference & 5 & 68.114 & 1{,}295.93 & 502{,}000 \\
+Test inference & 1 & 13.424 & 259.19 & 100{,}400 \\
+\bottomrule
+\end{tabular}
+\caption{Phase-level measurements of the Secure \ac{ff} run: sums of party-0 cumulative timer deltas (seed 42, single run).}
+\label{tab:res-sff-phase}
+\end{table}
+
+Within one phase the values are very regular: the five layer-1 epochs each took 14.2--14.5\,s and 248.2\,MB, the five layer-2 epochs 19.9--20.2\,s and 339.7--339.8\,MB, and every validation pass 13.4--13.9\,s and 259.2\,MB. A validation pass (1{,}000 samples, ten candidates each) and the test pass cost the same communication and rounds, as expected for a program whose instruction sequence does not depend on the data. Layer~2 training costs more than layer~1 training per epoch, which is consistent with the additional forward pass through the frozen first layer and the normalisation, but the measurements do not attribute the difference to these operations.
+
+\FloatBarrier
+\subsection{Verification Outcomes}\label{sec:res-sff-verify}
+Table~\ref{tab:res-sff-verify} summarises the verification of the recorded artifacts (Section~\ref{sec:impl-sff-verify}). Verification confirms that the run is consistent with the program, the inputs and the pre-registered bands; it does not extend the single-seed utility result.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{9.2cm}@{}}
+\toprule
+Check & Result \\
+\midrule
+Mini rehearsal run (20/10/10) & Completed; 13 of 13 hard checks passed; numerical bands 0 of 0 (none apply to the mini profile) \\
+Full run: exit status, marker & Compilation and run exit status 0; completion marker present \\
+Full run: hard checks & 13 of 13 passed (program and input hashes, output line types, configuration, order and finiteness of the opened values, secret checkpoint selection equals the strict-improvement rule on the opened counts, test size, sampler failure count 0, protected input files unchanged) \\
+Full run: numerical bands & 17 of 17 within the pre-registered bands (10 losses, 5 validation counts, best validation count, test count) \\
+Verifier correction & The original verifier reported a false failure of the protected-input check (12 of 13); the check was corrected and applied offline to the saved artifacts; no MPC program was re-run \\
+\bottomrule
+\end{tabular}
+\caption{Verification outcomes of the Secure \ac{ff} runs.}
+\label{tab:res-sff-verify}
+\end{table}
+
+\FloatBarrier
+\subsection{Seed-42 Reference Comparison with Plain FF}\label{sec:res-sff-plain}
+Table~\ref{tab:res-sff-plain} sets the Secure FF run beside the recorded Plain FF run for the same seed. The two runs share the dataset records, the split, the initial parameters, the architecture, the loss, the learning rate, the batch schedule and the checkpoint rule (the verified split and the checkpoint rule are documented in Section~\ref{sec:impl-sff}). They differ in arithmetic (float32 against fixed point with probabilistic truncation and approximate nonlinear functions) and in the negative labels, which come from different random generators, so identical trajectories are not expected. The plaintext values are rounded to six decimals for display; Plain FF validation counts are available for layer~2 only.
+
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}ccrrrcc@{}}
+\toprule
+Layer & Epoch & Plain loss & Secure loss & Secure $-$ Plain & Plain val. & Secure val. \\
+\midrule
+1 & 1 & 1.454458 & 1.454951 & $+4.9\times10^{-4}$ & -- & -- \\
+1 & 2 & 1.403894 & 1.404326 & $+4.3\times10^{-4}$ & -- & -- \\
+1 & 3 & 1.375259 & 1.376030 & $+7.7\times10^{-4}$ & -- & -- \\
+1 & 4 & 1.350818 & 1.351571 & $+7.5\times10^{-4}$ & -- & -- \\
+1 & 5 & 1.329866 & 1.330244 & $+3.8\times10^{-4}$ & -- & -- \\
+2 & 1 & 1.947360 & 1.946643 & $-7.2\times10^{-4}$ & 620 & 608 \\
+2 & 2 & 1.570358 & 1.569926 & $-4.3\times10^{-4}$ & 600 & 590 \\
+2 & 3 & 1.404595 & 1.404607 & $+1.3\times10^{-5}$ & 599 & 580 \\
+2 & 4 & 1.394085 & 1.393929 & $-1.6\times10^{-4}$ & 599 & 580 \\
+2 & 5 & 1.393278 & 1.393222 & $-5.6\times10^{-5}$ & 599 & 581 \\
+\midrule
+\multicolumn{2}{@{}l}{Selected epoch} & \multicolumn{2}{c}{layer 2, epoch 1 (both)} & & 620 & 608 \\
+\multicolumn{2}{@{}l}{Test correct} & & & & 627 (62.7\%) & 609 (60.9\%) \\
+\bottomrule
+\end{tabular}
+\caption{Descriptive single-seed comparison of the recorded Plain FF run and the Secure FF run (seed 42). Losses are per-sample local losses; the secure values are derived from the printed weighted losses (Table~\ref{tab:res-sff-loss}). ``val.'': number of correct validation predictions out of 1{,}000, after the given layer-2 epoch.}
+\label{tab:res-sff-plain}
+\end{table}
+
+The per-sample local losses of the two runs agree within $7.7\times10^{-4}$ at every layer-epoch, and the signs of the differences are mixed (positive for layer~1, mostly negative for layer~2). The validation counts of the secure run are lower than the plaintext counts by 10 to 19 examples in every layer-2 epoch, and its test count is lower by 18 examples (60.9\% against 62.7\%). The reported evidence does not show which factor accounts for this difference. Candidate factors include the different negative labels, fixed-point and probabilistic-truncation effects, the approximations of the exponential, logarithm, square root and division, and the rounding of the update constant; none of these was isolated, and the difference between two single runs may also partly reflect run-to-run variation, which the evidence does not quantify. The difference is therefore not attributed to secure computation, to fixed-point arithmetic or to any other single cause.
+
+\FloatBarrier
+\subsection{Preliminary Comparison of Secure BP and Secure FF}\label{sec:res-sbp-sff}
+Table~\ref{tab:res-sbp-sff} places the measured values of the two full-size secure runs side by side. This is a presentation of raw measurements from two single runs, not a controlled comparison, and no ratio, speed-up or efficiency factor is computed from them. Section~\ref{sec:method-sff} lists the differences that prevent a controlled reading: the compiler flags, the timing boundaries, the memory scopes, the architectures and parameter counts, the workloads and the checkpoint policies.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.7cm}>{\raggedleft\arraybackslash}p{2.5cm}>{\raggedleft\arraybackslash}p{2.5cm}>{\raggedright\arraybackslash}p{4.4cm}@{}}
+\toprule
+Quantity & Secure BP & Secure FF & Scope note \\
+\midrule
+MP-SPDZ time (s) & 933.263 & 253.451 & Party 0; includes preprocessing; excludes compilation \\
+External wall time (s) & 948.40 & 254.07 & BP: compilation and execution; FF: execution only \\
+Compilation time (s) & not separate & 18.76 & BP: included in external time \\
+Party-0 data sent (MB) & 1{,}497.67 & 4{,}501 & One party \\
+Global data sent (MB) & 5{,}224.49 & 14{,}748.1 & Sum over three parties \\
+Party-0 runtime rounds & $\approx$8{,}928{,}348 & 1{,}799{,}138 & Printed by party 0 \\
+Peak memory (MB) & 750.2 & 240.3 & BP: timed process tree (768{,}248\,KB); FF: maximum party process \\
+Selected checkpoint & epoch 5 (final) & layer-2 epoch 1 & Different policies \\
+Validation accuracy (\%) & 76.7 & 60.8 & BP: final model; FF: selected checkpoint \\
+Test accuracy (\%) & 77.2 & 60.9 & Single run each \\
+Parameters & 118{,}282 & 116{,}992 & Different architectures \\
+Updates; presentations & 200; 25{,}000 & 400; 100{,}000 & Different workloads \\
+Compiler flags & \texttt{-l -M -E ring} & \texttt{-M -E ring} & \texttt{-l}: flow optimisation \\
+\bottomrule
+\end{tabular}
+\caption{Raw measurements of the two full-size secure runs (seed 42, single runs, three parties on one host). Peak memory of Secure BP is 768{,}248\,KB expressed in MB (1\,MB = 1{,}024\,KB). The columns are not a controlled comparison.}
+\label{tab:res-sbp-sff}
+\end{table}
+
+Three observations can be read from the table without further assumptions. First, both programs completed the full-size three-party execution, and the Secure FF run recorded a lower MP-SPDZ time, a lower number of party-0 runtime rounds and a lower peak memory figure than the Secure BP run. Second, the Secure FF run recorded a higher communication volume than the Secure BP run (14{,}748.1\,MB against 5{,}224.49\,MB of global communication, and 4{,}501\,MB against 1{,}497.67\,MB for party~0). Third, the Secure FF test accuracy (60.9\%) is lower than that of Secure BP (77.2\%), as the plaintext accuracies of the two algorithms are in the five-seed benchmark. The differences in time, rounds and memory cannot be attributed to the learning rule, because of the confounds listed above; in particular, the time and memory figures have different scopes, and the two programs were compiled with different flags. The accuracy difference cannot be read as a measure of privacy-induced degradation, because the two algorithms already differ in their plaintext accuracy.
 
 \FloatBarrier
 \section{What These Results Do Not Show}\label{sec:res-notshow}
-Because secure \ac{ff} has not been implemented, no per-operation profile of either method exists, and no \ac{mpc}-aware modification has been evaluated, the results do not answer research questions 1--3. They show that plaintext \ac{bp} outperforms plaintext \ac{ff} in test accuracy in this benchmark configuration, that a bounded secure \ac{bp} run executes end to end and agrees closely with an FP64 reference, and that a full-size secure \ac{bp} run on the plaintext configuration completes on one host and agrees closely with the matching plaintext run for one seed.
+The results do not answer research questions 1--3 conclusively. They show that plaintext \ac{bp} outperforms plaintext \ac{ff} in test accuracy in this benchmark configuration; that a bounded secure \ac{bp} run executes end to end and agrees closely with an FP64 reference; that a full-size secure \ac{bp} run on the plaintext configuration completes on one host and agrees closely with the matching plaintext run for one seed; and that a Secure \ac{ff} prototype completes a full-size three-party run on the same split and protocol, with recorded artifacts that passed the verification checks, and with local losses that stay within $7.7\times10^{-4}$ of the plaintext run for the same seed. They do not provide a controlled Secure BP versus Secure FF comparison, because both runs are single seeds with different compiler flags, measurement scopes, workloads and checkpoint policies; they provide no variance estimate for either secure method; no per-operation profile of either method exists, so the cost drivers are unknown; and no \ac{mpc}-aware modification has been evaluated. They also do not establish biological validity of the \ac{ff} implementation.

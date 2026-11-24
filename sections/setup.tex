@@ -1,6 +1,6 @@
 \chapter{Experimental Setup}\label{chap:setup}
 
-This chapter lists the configurations of all experiments reported in Chapter~\ref{chap:results}. The plaintext benchmark, the historical bounded secure runs and the full-size secure run are separate experimental regimes and are described in separate tables. Measurement definitions are given in Section~\ref{sec:method-measure}.
+This chapter lists the configurations of all experiments reported in Chapter~\ref{chap:results}. The plaintext benchmark, the historical bounded secure runs and the two full-size secure runs (Secure BP and Secure FF) are separate experimental regimes and are described in separate tables. Measurement definitions are given in Section~\ref{sec:method-measure}.
 
 \section{Data}\label{sec:setup-data}
 All experiments use MNIST (28$\times$28 grey-scale digits, 784 input values, 10 classes). Table~\ref{tab:setup-data} lists the splits.
@@ -14,6 +14,7 @@ Regime & Train / validation / test & Source of the examples \\
 \midrule
 Plaintext benchmark (Plain BP, Plain FF) & 5{,}000 / 1{,}000 / 1{,}000 & Train and validation: first 5{,}000 and next 1{,}000 positions of a seed-42 permutation of the official training set; test: positions 1{,}000--1{,}999 of a seed-42 permutation of the official test set \\
 Full-size Secure BP & 5{,}000 / 1{,}000 / 1{,}000 & Same split function and indices as the plaintext benchmark \\
+Full-size Secure FF & 5{,}000 / 1{,}000 / 1{,}000 & Same split function and indices as the plaintext benchmark (checked by an independent verifier against the dataset and the Secure BP bundle); seed 42 \\
 Bounded Secure BP (A0, A1, BP-COMP-001) & 90 / 30 / 30 & Class-balanced subset, selection seed 42; 30 / 10 / 10 per party \\
 \bottomrule
 \end{tabular}
@@ -91,7 +92,7 @@ Experiment & SECURE-BP-MATCHED-v1, batched-matrix program, seed 42 \\
 Program & \texttt{mpc/programs/bp/bp\_matched\_matrix.mpc} \\
 Framework, protocol & MP-SPDZ v0.4.4 (commit \texttt{113c4e47}); Rep3 Ring; 3 parties; semi-honest, honest majority \\
 Arithmetic & 64-bit ring; \texttt{sfix(16,31)}; probabilistic truncation; \texttt{use\_split(3)} \\
-Compile and run command & \texttt{compile-run.py -l -M -E ring bp\_matched\_matrix -- -IF <bundle>/Input} \\
+Compile and run command & \texttt{compile-run.py -l -M -E ring bp\_matched\_matrix -- -IF \textless{}bundle\textgreater{}/Input} \\
 Model & 784--128--128--10, ReLU hidden layers, linear output layer, 118{,}282 parameters \\
 Initialisation & PyTorch default after seed 42, transposed to input-by-output layout; input by party 0 \\
 Data & 5{,}000 / 1{,}000 / 1{,}000 (Table~\ref{tab:setup-data}); example owner = position modulo 3 \\
@@ -108,8 +109,67 @@ Date & 15 November 2026 (run directory timestamp 23:49:46 local time) \\
 \label{tab:setup-full}
 \end{table}
 
+\section{Full-Size Secure FF Run}\label{sec:setup-sff}
+Table~\ref{tab:setup-sff} lists the configuration of the full-size Secure \ac{ff} run. The items were taken from the configuration file \texttt{configs/\allowbreak ff\_\allowbreak secure\_\allowbreak matched.yaml}, the program header and source, the command record and the run output. Where the Secure \ac{bp} and Secure \ac{ff} settings differ, the difference is intended (learning rule) or is a documented confound (Section~\ref{sec:method-sff}).
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.3cm}>{\raggedright\arraybackslash}p{9.6cm}@{}}
+\toprule
+Item & Setting \\
+\midrule
+Experiment & SECURE-FF-MATCHED-v1, profile \texttt{full}, seed 42; run directory \texttt{seed42\_run\_20261122\_212319} \\
+Program & \texttt{mpc/programs/ff/ff\_matched.mpc} \\
+Framework, protocol & MP-SPDZ v0.4.4 (commit \texttt{113c4e47}); Rep3 Ring; 3 parties; semi-honest, honest majority \\
+Arithmetic & 64-bit ring; \texttt{sfix(16,31)}; default probabilistic truncation \\
+Compile command & \texttt{compile.py -M -E ring ff\_matched} (no \texttt{-l}) \\
+Run command & \texttt{Scripts/ring.sh ff\_matched -IF \textless{}bundle\textgreater{}/Input}, three party processes on \texttt{localhost} \\
+Model & 784--128--128, ReLU, 116{,}992 parameters; no output layer \\
+Initialisation & Plain FF model after \texttt{random.seed} and \texttt{torch.manual\_seed} with seed 42, transposed to input-by-output layout; input by party 0 \\
+Data & 5{,}000 / 1{,}000 / 1{,}000 (Table~\ref{tab:setup-data}); record owner = position modulo 3 \\
+Order & One seeded data loader iterated ten times; state continued across layers \\
+Local objective & $\frac1B\sum\mathrm{softplus}(\theta-g^{+})+\frac1B\sum\mathrm{softplus}(g^{-}-\theta)$; $\theta=2.0$; goodness = sum of squared ReLU activations before normalisation \\
+Normalisation & Stable max-scaled L2 normalisation between the layers \\
+Negative labels & Uniformly random incorrect label, generated in \ac{mpc} (ten rejection-sampling tries of eight secret bits) \\
+Optimizer & Per-layer \ac{sgd}, learning rate 0.01, no momentum or weight decay; update $\eta/B$ applied as $a\cdot2^{-s}$ \\
+Batches & Batch size 128; 39 batches of 128 and one of 8 per epoch (40 batches); every example of a batch is presented once with its correct label (positive) and once with an incorrect label (negative), in one stacked matrix \\
+Epochs and updates & 5 epochs for layer 1, then 5 epochs for layer 2 (layer 1 frozen); 200 updates per layer, 400 in total \\
+Inference & Ten candidate labels, chunks of 50 samples, score = goodness of layer 1 + goodness of layer 2, argmax with lowest index on ties \\
+Checkpoint & Layer-2 epoch with the strictly highest validation correct count (first epoch always selected), restored before the single test evaluation \\
+Disclosure & Weighted loss per layer-epoch; validation correct count per layer-2 epoch; selected epoch; test correct count; sampler failure count \\
+Repetitions & One run (seed 42); no timing repetitions \\
+Date & 22 November 2026 (command record: 20:23:19 UTC) \\
+\bottomrule
+\end{tabular}
+\caption{Configuration of the full-size Secure \ac{ff} run. The rehearsal run used the \texttt{mini} profile (20/10/10 examples, batch 8, two epochs per layer) and is not an experiment.}
+\label{tab:setup-sff}
+\end{table}
+
+Table~\ref{tab:setup-diff} lists the configuration differences between the two secure programs that matter for the interpretation of the preliminary comparison.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{5.2cm}>{\raggedright\arraybackslash}p{5.2cm}@{}}
+\toprule
+Item & Secure BP & Secure FF \\
+\midrule
+Architecture; parameters & 784--128--128--10; 118{,}282 & 784--128--128; 116{,}992 \\
+Learning rate & 0.05 & 0.01 \\
+Updates; presentations & 200; about 25{,}000 & 400; about 100{,}000 (positive and negative) \\
+Evaluation & Final epoch-5 model; one forward pass per sample & Validation-selected layer-2 epoch; ten candidate passes per sample \\
+Compiler invocation & \texttt{compile-run.py -l -M -E ring} & \texttt{compile.py -M -E ring} \\
+External wall time covers & Compilation and execution & Execution only; compilation timed separately \\
+Peak memory covers & Largest process of the timed tree (compilation included) & Largest of three party processes (compilation excluded) \\
+\bottomrule
+\end{tabular}
+\caption{Differences between the Secure BP and Secure FF configurations.}
+\label{tab:setup-diff}
+\end{table}
+
 \section{Execution Environment}\label{sec:setup-env}
-Table~\ref{tab:setup-env} records what is known about the execution environment. Only information present in the run artifacts is treated as recorded. The host description of the secure runs was obtained by inspecting the machine that holds the run directories on 16 November 2026; it is not part of the run log, so it is reported as the likely, but unverified, environment of the run.
+Table~\ref{tab:setup-env} records what is known about the execution environment. Only information present in the run artifacts is treated as recorded. The host description of the secure runs was obtained by inspecting the machine that holds the run directories on 16 November 2026; it is not part of the run log, so it is reported as the likely, but unverified, environment of the run. The Secure FF command record shows the same arrangement (three party processes on \texttt{localhost}, \texttt{-h localhost}) and does not contain a hardware description; the host of the Secure FF run is therefore likewise not verified from its artifacts.
 
 \begin{table}[ht]
 \centering

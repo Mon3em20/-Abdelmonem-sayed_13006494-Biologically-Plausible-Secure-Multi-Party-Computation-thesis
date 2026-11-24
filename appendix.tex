@@ -6,7 +6,7 @@
 \appendixpage
 
 \chapter{Evidence Manifest}\label{app:manifest}
-This appendix lists the provenance of the full-size secure \ac{bp} run so that the run can be checked and, in a separate controlled environment, repeated. Paths beginning with \texttt{\textasciitilde/} are on the execution host and are not part of the repository; repository paths are relative to its root. Secret-bearing material (MP-SPDZ \texttt{Player-Data}, party keys and certificates, the raw party input files) is deliberately excluded from the thesis package. All hashes are SHA-256 and were recomputed for this thesis version on 16 November 2026, without executing any MPC program.
+This appendix lists the provenance of the two full-size secure runs, Secure \ac{bp} (Table~\ref{tab:app-manifest}) and Secure \ac{ff} (Table~\ref{tab:app-manifest-ff}), so that the runs can be checked and, in a separate controlled environment, repeated. Paths beginning with \texttt{\textasciitilde/} are on the execution host and are not part of the repository; repository paths are relative to its root. Secret-bearing material (MP-SPDZ \texttt{Player-Data}, party keys and certificates, the raw party input files) is deliberately excluded from the thesis package. All hashes are SHA-256. The Secure \ac{bp} hashes were recomputed for this thesis on 16 November 2026; the Secure \ac{ff} hashes are those recorded by the run and by the evidence files of the research repository, and the hashes of the saved run artifacts were read on 24 November 2026. No MPC program was executed to produce this appendix.
 
 {\small
 \begin{longtable}{@{}>{\raggedright\arraybackslash}p{3.8cm}>{\raggedright\arraybackslash}p{10.0cm}@{}}
@@ -37,6 +37,41 @@ Compiled program hash (printed by the compiler) & \texttt{1636dd29ece205a0\allow
 Player-Data backup & \texttt{\textasciitilde/secure-bp-runs/\allowbreak player-data-backup\_\allowbreak before\_\allowbreak full\_\allowbreak 20261115\_\allowbreak 234946}; 33 files, 40{,}492{,}581 bytes; contents not read \\
 Repository evidence record & \texttt{docs/experimental-results/\allowbreak secure-bp-full-run/} (report, results, integrity manifest, open issues) \\
 Plain BP reference & \texttt{src/baselines/bp.py}; \texttt{results/baselines/bp.csv}; \texttt{results/benchmarks/plaintext/runs.csv} \\
+\bottomrule
+\end{longtable}
+}
+
+{\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{3.8cm}>{\raggedright\arraybackslash}p{10.0cm}@{}}
+\caption{Evidence manifest of the full-size Secure \ac{ff} run (seed 42) and its rehearsal. Paths are relative to the research repository.}\label{tab:app-manifest-ff}\\
+\toprule
+Item & Value \\
+\midrule
+\endfirsthead
+\toprule
+Item & Value \\
+\midrule
+\endhead
+Experiment & SECURE-FF-MATCHED-v1 \\
+Program & \texttt{mpc/\allowbreak programs/\allowbreak ff/\allowbreak ff\_\allowbreak matched.mpc} \\
+Program SHA-256 & \texttt{d087d4ac79510f41\allowbreak daba559c847a518e\allowbreak 9dec55530d2160c0\allowbreak 90e8b9a229e368b4} \\
+Configuration & \texttt{configs/\allowbreak ff\_\allowbreak secure\_\allowbreak matched.yaml} \\
+MP-SPDZ & v0.4.4, commit \texttt{113c4e47dd94bca9\allowbreak ecab029d2f0abe64\allowbreak 9bea5c52} \\
+Repository state & The Secure FF program, configuration, scripts, tests and results were untracked by version control in the research repository when this thesis was updated; they are identified by the hashes in \texttt{results/\allowbreak mpc/\allowbreak ff/\allowbreak matched/\allowbreak SECURE-FF-MATCHED-v1/\allowbreak SOURCE\_AND\_INPUT\_SHA256.txt} \\
+Input bundle (full) & \texttt{results/\allowbreak mpc/\allowbreak ff/\allowbreak matched/\allowbreak SECURE-FF-MATCHED-v1/\allowbreak seed42/}; contains the three input files, \texttt{metadata.json}, \texttt{parameters.json}, \texttt{data\_order.json}, \texttt{ownership\_plan.csv} and \texttt{verification\_summary.json} \\
+Input-P0-0 SHA-256 & \texttt{6ccb9088e85a6eb5\allowbreak defdbc4f3cc77f47\allowbreak 072aeb6ff78ba554\allowbreak 4d78113226dce24e} \\
+Input-P1-0 SHA-256 & \texttt{4083024b3c3e4e45\allowbreak 236c510c0a2f3314\allowbreak 51a9c8bfe436cf02\allowbreak 2064fdba2e333277} \\
+Input-P2-0 SHA-256 & \texttt{95890e66ad45f496\allowbreak a7b66b3232d06faa\allowbreak 5f4fd594b1f9476e\allowbreak d3feea771133c24c} \\
+Full-run directory & \texttt{results/\allowbreak mpc/\allowbreak ff/\allowbreak matched/\allowbreak SECURE-FF-MATCHED-v1/\allowbreak seed42\_\allowbreak run\_\allowbreak 20261122\_\allowbreak 212319/} \\
+Commands & \texttt{compile.py -M -E ring ff\_matched}; \texttt{Scripts/ring.sh ff\_matched -IF \textless{}bundle\textgreater{}/Input} (\texttt{command.txt}, SHA-256 \texttt{a975e48d6dae600d\allowbreak a8a5dad6e117be43\allowbreak a8ffb85e3ad6ed41\allowbreak c1e3764e3c92f841}) \\
+Run log (party 0) & \texttt{party0.log}, 5{,}364 bytes, SHA-256 \texttt{fbeb6c2979103dad\allowbreak 54f1f5de3513656d\allowbreak 42a41637bbdcb3f7\allowbreak 496cf97b288d7b0b} \\
+Measurement record & \texttt{secure\_ff\_measured.json}, SHA-256 \texttt{9d22acd0dbbc5e78\allowbreak c82881ee97da5744\allowbreak f55c46000fee473f\allowbreak 86873b0c16671c98}; derived from the logs, \texttt{rss\_kb.txt}, \texttt{run\_time.txt} and \texttt{compile\_time.txt}; regenerated on 24 November 2026 with three keys added (original preserved in the audit trail) \\
+Verification report & \texttt{verification.txt} and \texttt{verification.json}; \texttt{verification.txt} SHA-256 \texttt{42396661cefd104a\allowbreak 1cd701d07cd82e4c\allowbreak 88bff870941ad38e\allowbreak a74284e9a6cc4953}; hard checks 13/13, bands 17/17 (corrected H13 check, 24 November 2026) \\
+Audit trail & \texttt{audit\_trail/\allowbreak 2026-11-24\_\allowbreak h13\_\allowbreak and\_\allowbreak selected\_\allowbreak checkpoint\_\allowbreak fix/}: preserved original verifier outputs with SHA-256 list and a report of the two corrections \\
+Rehearsal run & \texttt{rehearsal\_\allowbreak mini\_\allowbreak run\_\allowbreak 20261122\_\allowbreak 212103/} (profile \texttt{mini}); hard checks 13/13; \texttt{party0.log} SHA-256 \texttt{d9da6b6e50ccc2ba\allowbreak e1d1c8a1fbca079b\allowbreak c32c387ceba5a5d8\allowbreak 4e043fe04e19d0ce} \\
+Comparison artifacts & \texttt{comparison\_\allowbreak post\_\allowbreak run/} (data-equivalence and comparison manifests) and \texttt{seed42\_\allowbreak run\_\allowbreak 20261122\_\allowbreak 212319/\allowbreak comparison\_\allowbreak table.md} \\
+Plain FF reference & \texttt{results/\allowbreak baselines/\allowbreak ff.csv}; \texttt{reference/\allowbreak plain\_\allowbreak ff\_\allowbreak vs\_\allowbreak reference\_\allowbreak seed42.json}; \texttt{reference/\allowbreak tolerance\_\allowbreak bands\_\allowbreak seed42.json} \\
+Secure BP values used for comparison & Saved Secure BP run log and \texttt{docs/\allowbreak experimental-results/\allowbreak secure-bp-full-run/} (Table~\ref{tab:app-manifest}); values agree between log and report \\
 \bottomrule
 \end{longtable}
 }

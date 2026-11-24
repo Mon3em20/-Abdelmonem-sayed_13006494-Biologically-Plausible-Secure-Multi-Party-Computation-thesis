@@ -18,3 +18,17 @@
 | Omit declaration/title page from review PDF | Current working choice | AI statement unresolved |
 | Suppress List of Figures until figures exist | Current working choice | |
 | Cite Zhou 2026 and Elnady 2026 as supplementary (not among proposal 23) | Current working choice | |
+
+## Entries added 24 November 2026 (earlier rows keep their original wording)
+| Decision | Status | Note |
+|---|---|---|
+| Single title page (duplicate cover removed) | Current working choice (student decision, Nov 2026) | Supersedes "Keep two \titlePage calls" |
+| AI-use clause removed from the Declaration; Declaration keeps clauses (i) and (ii) | Student decision | No replacement statement |
+| Abstract and Acknowledgments: headings and TOC entries kept, bodies empty | Student decision | Student writes both after the chapters are final |
+| Author name `Abdelmonem Elsayed`; submission date 15 January 2027 | Confirmed by student | Supersedes the `[confirm]` / unconfirmed markers |
+| Secure FF checkpoint = layer-2 epoch with strictly best validation count (secret selection), as Plain FF | Implemented (SECURE-FF-MATCHED-v1) | Secure BP uses epoch 5; policy difference documented |
+| Secure FF negative labels generated inside MPC (10 rejection-sampling tries x 8 secret bits, offset 1..9) | Implemented | Failure probability (4/256)^10 per label; fall-back counted |
+| Weighted loss = sum_b loss_b*B_b/8 opened; per-sample = weighted*8/5000 | Implemented | Weighted sums are not mean losses |
+| Report Secure BP vs Secure FF as raw side-by-side values, with no ratios or speed-up | Current working choice | Comparison confounded (flags, scopes, architecture, workload, checkpoint) |
+| H13 verifier corrected (field-wise parse of protected input files); original outputs preserved; no MPC re-run | Done 24 Nov 2026 | Earlier "failure" was a verifier artefact, not a run failure |
+| Single-seed secure results; further seeds only after flags, scopes and checkpoint policy are aligned | Current working choice | Seeds 43-46 inputs prepared, not run |
